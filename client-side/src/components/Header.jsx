@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import common from "../../data/common";
-import favicon from "../../assests/favicon.ico";
-import avatar from "../../assests/avatar.png";
+import common from "../data/common";
+import favicon from "../assests/favicon.ico";
+import avatar from "../assests/avatar.png";
 
 const Header = () => {
   const [isSignedIn, setIsSignedIn] = useState(false);
