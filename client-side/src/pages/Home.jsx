@@ -3,9 +3,10 @@ import common from "../data/common";
 import { Link } from "react-router-dom";
 import { pokemons } from "../pokemons";
 import { logger } from "../utils/logger";
+import { filter } from "lodash";
 
-const Filter = ({ searchValue }) => {
-  const types = common.pokemonTypes;
+const Filter = ({ searchValue, onSearchChange, applyAdancefilter }) => {
+  const types = [...common.pokemonTypes];
 
   const [isAdvanceFilter, setIsAdvanceFilter] = useState(false);
 
@@ -14,7 +15,7 @@ const Filter = ({ searchValue }) => {
       <div className="search-container">
         <div className="container search-content">
           <div>
-            <label htmlFor="Search">
+            <label htmlFor="search">
               {common.filter.basic.searchPlaceHolder}
             </label>
             <div>
@@ -22,7 +23,8 @@ const Filter = ({ searchValue }) => {
                 type="text"
                 id="search-input"
                 autoComplete="off"
-                ref={searchValue}
+                value={searchValue}
+                onChange={onSearchChange}
               />
               <input
                 type="submit"
@@ -67,7 +69,12 @@ const Filter = ({ searchValue }) => {
             <span
               data-value={type}
               className={`radio-button ${isActive ? `active` : ""}`}
-              onClick={() => setIsActive(!isActive)}
+              onClick={() => {
+                const state = !isActive;
+                setIsActive(state);
+                applyAdancefilter(type, state);
+                logger.info(`radio button for type ${type} is set to ${state}`);
+              }}
             ></span>
             <span className={`type ${type.toLowerCase()}-type-color`}>
               {type}
@@ -190,12 +197,6 @@ const Main = ({ data }) => {
   return (
     <main className="container main-pokedex-section">
       <div className="filter2-button-container">
-        <div
-          id="shuffle-pokedex"
-          className="standard-button filter2-buttons display-flex-center opacity-transition"
-        >
-          Shuffle Pokédex
-        </div>
         <FilterDropdown />
       </div>
       <ul className="lst-pokemons">
@@ -219,9 +220,26 @@ const Home = () => {
   const [appliedFilters, setAppliedFilters] = useState([]);
   const [searchValue, setSearchValue] = useState("");
 
+  const onSearchChange = (event) => {
+    logger.info(`Search field input is ${event.target.value}`);
+    setSearchValue(event.target.value);
+  };
+
+  const applyAdvanceFilter = (type, isActive) => {
+    var filterTypes = [...appliedFilters];
+    if (isActive) filterTypes.push(type);
+    else filterTypes = filter(filterTypes, (filterType) => filterType !== type);
+    logger.info(`Applied Filter: ${filterTypes} active: ${isActive}`);
+    setAppliedFilters(filterTypes);
+  };
+
   return (
     <>
-      <Filter searchValue={searchValue} />
+      <Filter
+        searchValue={searchValue}
+        onSearchChange={onSearchChange}
+        applyAdancefilter={applyAdvanceFilter}
+      />
       <Main data={data} />
     </>
   );
