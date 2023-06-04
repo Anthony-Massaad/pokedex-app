@@ -887,6 +887,10 @@ MAIN POKEDEX SECTION
   z-index: 50;
 }
 
+.custom-options.custom-active {
+  display: block !important;
+}
+
 /**
 copyright css
 
