@@ -1,9 +1,10 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import common from "../data/common";
 import { Link } from "react-router-dom";
 import { pokemons } from "../pokemons";
 import { logger } from "../utils/logger";
 import { omit } from "lodash";
+import axios from "axios";
 
 const Filter = ({
   appliedFilters,
@@ -75,11 +76,13 @@ const Filter = ({
               />
             </div>
             <p className="additional-info">
+              {" "}
               {common.filter.basic.additionalInfo}
             </p>
           </div>
           <div>
             <p className="clarification display-flex-center">
+              {" "}
               {common.filter.basic.clarification}
             </p>
           </div>
@@ -205,9 +208,9 @@ const Main = ({ data, setFilterDropdownActive, filterDrowndownActive }) => {
           ? data.map((pokemon, idx) => (
               <PokemonCard
                 key={idx}
-                name={pokemon.name}
-                id={pokemon.id}
-                types={pokemon.type}
+                name={pokemon.poke_name}
+                id={pokemon.poke_id}
+                types={pokemon.types}
               />
             ))
           : "...Loading"}
@@ -217,7 +220,7 @@ const Main = ({ data, setFilterDropdownActive, filterDrowndownActive }) => {
 };
 
 const Home = () => {
-  const [data, setData] = useState(pokemons);
+  const [data, setData] = useState(null);
   const [appliedFilters, setAppliedFilters] = useState({});
   const [searchValue, setSearchValue] = useState("");
   const [isAdvanceFilter, setIsAdvanceFilter] = useState(false);
@@ -231,6 +234,23 @@ const Home = () => {
     logger.info(filterTypes);
     setAppliedFilters(filterTypes);
   };
+
+  const apiTest = async () => {
+    await axios
+      .get(`http://127.0.0.1:8080/getPokemons`)
+      .then((res) => {
+        const res_data = res.data;
+        logger.info(res_data);
+        setData(res_data["pokemons"]);
+      })
+      .catch((error) => {
+        logger.error(error);
+      });
+  };
+
+  useEffect(() => {
+    apiTest();
+  }, []);
 
   return (
     <>
