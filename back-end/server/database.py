@@ -1,6 +1,7 @@
 from sqlalchemy.sql import func
 from collections import defaultdict
 from . import db
+from utils.logger import Logger
 
 STRING_LENGTH = 1000
  
@@ -11,28 +12,30 @@ class Pokemon(db.Model):
     id = db.Column(db.Integer, unique=True)
     poke_description = db.Column(db.String(STRING_LENGTH))
 
-class Attribute(db.Model): 
-    attr_name = db.Column(db.String(STRING_LENGTH), primary_key=True)
-
 class Type(db.Model):
     type_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     poke_name = db.Column(db.String(STRING_LENGTH), db.ForeignKey('pokemon.poke_name'))
-    attr_name =  db.Column(db.String(STRING_LENGTH), db.ForeignKey('attribute.attr_name'))
+    attr_name =  db.Column(db.String(STRING_LENGTH))
     
-    attribute_rel = db.relationship("Attribute", foreign_keys=[attr_name])
     pokemon_rel = db.relationship("Pokemon", foreign_keys=[poke_name])
 
 class Weakness(db.Model):
     weakness_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     poke_name = db.Column(db.String(STRING_LENGTH), db.ForeignKey('pokemon.poke_name'))
-    attr_name =  db.Column(db.String(STRING_LENGTH), db.ForeignKey('attribute.attr_name'))
+    attr_name =  db.Column(db.String(STRING_LENGTH))
     
-    attribute_rel = db.relationship("Attribute", foreign_keys=[attr_name])
     pokemon_rel = db.relationship("Pokemon", foreign_keys=[poke_name])
 
 class User(db.Model):
     username = db.Column(db.String(STRING_LENGTH), primary_key=True)
     password = db.Column(db.String(STRING_LENGTH))
+
+class Evolution(db.Model):
+    evolution_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    poke_name = db.Column(db.String(STRING_LENGTH), db.ForeignKey('pokemon.poke_name'))
+    poke_name_evolution = db.Column(db.String(STRING_LENGTH), db.ForeignKey('pokemon.poke_name'))
+    
+    pokemon_rel = db.relationship("Pokemon", foreign_keys=[poke_name])
 
 # class Favorites(db.Model): 
 #     favorite_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
@@ -47,7 +50,6 @@ def getAllPokemons():
     results = query.all()  # Execute the query and fetch all the results
     poke_dict = defaultdict(list)
     poke_dict["pokemons"] = []
-    print("Query:\n", query, "\n", results)
     for record in results:
         data = {
             "poke_name": record[0],
@@ -58,24 +60,92 @@ def getAllPokemons():
         poke_dict["pokemons"].append(data)
         
     json_data = dict(poke_dict)
+    
+    Logger.info("Dictionary for all pokemons is: \n", json_data)
+
     return json_data
 
+def getPokemonByName(name):
+    
+    def getEvolutionDetail(evo_name):
+        evo_query = db.session.query(
+        Pokemon.poke_name,
+        Pokemon.poke_id,
+        Pokemon.id,
+        func.group_concat(Type.attr_name.distinct()),
+        ).filter(Pokemon.poke_name == evo_name)\
+        .join(Type, Pokemon.poke_name == Type.poke_name)
+        
+        evo_results = evo_query.all()  # Execute the query and fetch all the result
+        Logger.info("Getting evolution information of: ", evo_name, " created ", evo_results)
+        
+        if len(evo_results) == 0:
+            return
+        
+        result = evo_results[0]
+        return {
+            "poke_name": result[0],
+            "poke_id": result[1],
+            "id": result[2],
+            "types": result[3].split(",")
+        }
+        
+    
+    Logger.info("Entered Get pokemon by name")
+    print("-----------------------------")
+    query = db.session.query(
+    Pokemon.poke_name,
+    Pokemon.poke_id,
+    Pokemon.id,
+    Pokemon.poke_description,
+    func.group_concat(Type.attr_name.distinct()),
+    func.group_concat(Weakness.attr_name.distinct()),
+    func.group_concat(Evolution.poke_name_evolution.distinct())
+    ).filter(Pokemon.poke_name == name)\
+    .join(Type, Pokemon.poke_name == Type.poke_name)\
+    .join(Weakness, Pokemon.poke_name == Weakness.poke_name)\
+    .join(Evolution, Pokemon.poke_name == Evolution.poke_name)
+    results = query.all()  # Execute the query and fetch all the result
+    
+    Logger.info("Selected Pokemon Results: :\n", results)
+    
+    if len(results) != 1:
+        Logger.error("Getting pokemon by name resulted in no results")
+    
+    result = results[0]     
+    poke_dict = defaultdict(list)
+    poke_dict["pokemon"] = {
+        "poke_name": result[0],
+        "poke_id": result[1],
+        "id": result[2],
+        "description": result[3],
+        "types": result[4].split(","),
+        "weaknesses": result[5].split(","),
+    }
+    poke_dict["evolution"] = []
+    
+    evolutions = result[6].split(",")
+    for evo in evolutions:
+        poke_dict["evolution"].append(getEvolutionDetail(evo))
+        
+    sorted_evolution = sorted(poke_dict["evolution"], key=lambda x: x['id'])
+    poke_dict["evolution"] = sorted_evolution
+    
+    json_data = dict(poke_dict)
+    Logger.info("Returning Dictionary: \n", json_data)
+    print("-----------------------------------")
+    return json_data
+    
 def queries():
     # Delete all rows from the tables
-    db.session.query(Attribute).delete()
     db.session.query(Weakness).delete()
+    db.session.query(Evolution).delete()
     db.session.query(Type).delete()
     db.session.query(User).delete()
     db.session.query(Pokemon).delete()
     # db.session.query(Favorites).delete()
 
     db.session.commit()
-    
-    
-    pokemonTypes = ["Bug", "Dragon", "Fairy", "Fire", "Ghost", "Ground", "Normal", "Psychic", "Steel", "Dark", "Electric", "Fighting", "Flying", "Grass", "Ice", "Poison", "Rock", "Water"]
-    for type_name in pokemonTypes:
-        attribute = Attribute(attr_name=type_name)
-        db.session.add(attribute)
         
     # TODO Automate this from a json!
 
@@ -125,5 +195,30 @@ def queries():
     db.session.add(Weakness(poke_name="Charizard", attr_name="Ground"))
     db.session.add(Weakness(poke_name="Charizard", attr_name="Rock"))
     
+    db.session.add(Evolution(poke_name="Bulbasaur", poke_name_evolution="Bulbasaur"))
+    db.session.add(Evolution(poke_name="Bulbasaur", poke_name_evolution="Ivysaur"))
+    db.session.add(Evolution(poke_name="Bulbasaur", poke_name_evolution="Venusaur"))
+    
+    db.session.add(Evolution(poke_name="Ivysaur", poke_name_evolution="Bulbasaur"))
+    db.session.add(Evolution(poke_name="Ivysaur", poke_name_evolution="Ivysaur"))
+    db.session.add(Evolution(poke_name="Ivysaur", poke_name_evolution="Venusaur"))
+    
+    db.session.add(Evolution(poke_name="Venusaur", poke_name_evolution="Bulbasaur"))
+    db.session.add(Evolution(poke_name="Venusaur", poke_name_evolution="Ivysaur"))
+    db.session.add(Evolution(poke_name="Venusaur", poke_name_evolution="Venusaur"))
+    
+    db.session.add(Evolution(poke_name="Charmander", poke_name_evolution="Charmander"))
+    db.session.add(Evolution(poke_name="Charmander", poke_name_evolution="Charmeleon"))
+    db.session.add(Evolution(poke_name="Charmander", poke_name_evolution="Charizard"))
+    
+    db.session.add(Evolution(poke_name="Charmeleon", poke_name_evolution="Charmander"))
+    db.session.add(Evolution(poke_name="Charmeleon", poke_name_evolution="Charmeleon"))
+    db.session.add(Evolution(poke_name="Charmeleon", poke_name_evolution="Charizard"))
+    
+    db.session.add(Evolution(poke_name="Charizard", poke_name_evolution="Charmander"))
+    db.session.add(Evolution(poke_name="Charizard", poke_name_evolution="Charmeleon"))
+    db.session.add(Evolution(poke_name="Charizard", poke_name_evolution="Charizard"))
+    
     db.session.commit()
     # getAllPokemons()
+    getPokemonByName("Charizard")
