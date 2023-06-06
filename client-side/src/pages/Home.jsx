@@ -239,7 +239,7 @@ const Home = () => {
       .get(`http://127.0.0.1:8080/getPokemons`)
       .then((res) => {
         const res_data = res.data;
-        logger.info(res_data);
+        logger.info("Fetched data from home: ", res_data);
         setData(res_data.pokemons);
       })
       .catch((error) => {
