@@ -59,13 +59,14 @@ def getAllPokemons():
         }
         poke_dict["pokemons"].append(data)
         
+    sorted_pokemons = sorted(poke_dict["pokemons"], key=lambda x: x['id'])
+    poke_dict["pokemons"] = sorted_pokemons
     json_data = dict(poke_dict)
-    
     Logger.info("Dictionary for all pokemons is: \n", json_data)
 
     return json_data
 
-def getPokemonByName(name):
+def getPokemonByPokeName(name):
     
     def getEvolutionDetail(evo_name):
         evo_query = db.session.query(
@@ -89,8 +90,32 @@ def getPokemonByName(name):
             "id": result[2],
             "types": result[3].split(",")
         }
-        
     
+    def getPokemonById(id, max_id):
+        select_id = id
+        if id == max_id + 1: 
+            select_id = 1
+        elif id == 0:
+            select_id = max_id
+        
+        pokemon_by_id = db.session.query(
+        Pokemon.poke_name,
+        Pokemon.poke_id,
+        ).filter(Pokemon.id == select_id)
+        
+        id_poke_results = pokemon_by_id.all()
+        Logger.info("Getting pokemon by id: ", select_id, " created ", id_poke_results)
+        
+        if len(id_poke_results) != 1:
+            Logger.error("Getting pokemon by id resulted is more or less than 1: ", len(id_poke_results))
+        
+        selected_pokemon = id_poke_results[0]
+        return {
+            "poke_name": selected_pokemon[0],
+            "poke_id": selected_pokemon[1]
+        }
+
+            
     Logger.info("Entered Get pokemon by name")
     print("-----------------------------")
     query = db.session.query(
@@ -114,22 +139,29 @@ def getPokemonByName(name):
     
     result = results[0]     
     poke_dict = defaultdict(list)
+    id = result[2]
+    # pokemon information
     poke_dict["pokemon"] = {
         "poke_name": result[0],
         "poke_id": result[1],
-        "id": result[2],
+        "id": id,
         "description": result[3],
         "types": result[4].split(","),
         "weaknesses": result[5].split(","),
     }
-    poke_dict["evolution"] = []
     
+    # evolution of pokemon
+    poke_dict["evolution"] = []
     evolutions = result[6].split(",")
     for evo in evolutions:
         poke_dict["evolution"].append(getEvolutionDetail(evo))
-        
     sorted_evolution = sorted(poke_dict["evolution"], key=lambda x: x['id'])
     poke_dict["evolution"] = sorted_evolution
+    
+    # get the previous and next pokemon selection
+    max_id = db.session.query(Pokemon).count()
+    poke_dict["next_pokemon"] = getPokemonById(id + 1, max_id)
+    poke_dict["previous_pokemon"] = getPokemonById(id - 1, max_id)
     
     json_data = dict(poke_dict)
     Logger.info("Returning Dictionary: \n", json_data)
@@ -221,4 +253,4 @@ def queries():
     
     db.session.commit()
     # getAllPokemons()
-    getPokemonByName("Charizard")
+    # getPokemonByName("Charizard")

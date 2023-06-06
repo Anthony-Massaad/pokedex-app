@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import common from "../data/common";
 import { Link } from "react-router-dom";
-import { pokemons } from "../pokemons";
 import { logger } from "../utils/logger";
 import { omit } from "lodash";
 import axios from "axios";
@@ -235,21 +234,17 @@ const Home = () => {
     setAppliedFilters(filterTypes);
   };
 
-  const apiTest = async () => {
-    await axios
+  useEffect(() => {
+    axios
       .get(`http://127.0.0.1:8080/getPokemons`)
       .then((res) => {
         const res_data = res.data;
         logger.info(res_data);
-        setData(res_data["pokemons"]);
+        setData(res_data.pokemons);
       })
       .catch((error) => {
         logger.error(error);
       });
-  };
-
-  useEffect(() => {
-    apiTest();
   }, []);
 
   return (

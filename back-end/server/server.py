@@ -2,7 +2,8 @@ from flask import request
 import json
 from . import db, DB_NAME, app
 from os import path
-from server.database import queries, getAllPokemons
+from server.database import queries, getAllPokemons, getPokemonByPokeName
+from utils.logger import Logger
 
 @app.route("/", methods=['GET'])
 def welcome():
@@ -11,8 +12,8 @@ def welcome():
 @app.route("/getPokemonByName", methods=['GET'])
 def getPokemonByName():
     pokemonName = request.args.get('pokemonName')
-    print(f"Pokemon name is {pokemonName}")
-    return "Got Pokemon by name"
+    Logger.info("Pokemon name is ", pokemonName)
+    return getPokemonByPokeName(pokemonName)
 
 @app.route("/getPokemons", methods=['GET'])
 def getPokemons():
