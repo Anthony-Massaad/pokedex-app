@@ -46,7 +46,7 @@ class Evolution(db.Model):
 #     pokemon_rel = db.relationship("Pokemon", foreign_keys=[poke_name])
 
 def getAllPokemons():
-    query = db.session.query(Pokemon.poke_name, Pokemon.poke_id, Pokemon.id, func.group_concat(Type.attr_name)).join(Type, Pokemon.poke_name == Type.poke_name).group_by(Pokemon.poke_name)
+    query = db.session.query(Pokemon.poke_name, Pokemon.poke_id, Pokemon.id, func.group_concat(Type.attr_name)).join(Type, Pokemon.poke_name == Type.poke_name).order_by(Pokemon.id.asc()).group_by(Pokemon.poke_name)
     results = query.all()  # Execute the query and fetch all the results
     poke_dict = defaultdict(list)
     poke_dict["pokemons"] = []
@@ -58,9 +58,6 @@ def getAllPokemons():
             "types": record[3].split(","),
         }
         poke_dict["pokemons"].append(data)
-        
-    sorted_pokemons = sorted(poke_dict["pokemons"], key=lambda x: x['id'])
-    poke_dict["pokemons"] = sorted_pokemons
     json_data = dict(poke_dict)
     Logger.info("Dictionary for all pokemons is: \n", json_data)
 
@@ -167,6 +164,9 @@ def getPokemonByPokeName(name):
     Logger.info("Returning Dictionary: \n", json_data)
     print("-----------------------------------")
     return json_data
+
+def getPokemonsByOrder(order):
+    ...
     
 def queries():
     # Delete all rows from the tables
