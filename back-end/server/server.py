@@ -21,7 +21,7 @@ def getPokemons():
 
 def create_app():
     app.config['SECRET_KEY'] = 'secret_key' # Secure the cookie or session data
-    app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{DB_NAME}' # STORING THE DATABSE INSIDE THE WEBSITE DIRECOTRY Just tells flask
+    app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{DB_NAME}'
 
     db.init_app(app) # takes the databse and applies the app to it
     # if not path.exists(f"instance/{DB_NAME}"):
