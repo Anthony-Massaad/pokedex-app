@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import common from "../data/common";
 import { Link } from "react-router-dom";
 import { logger } from "../utils/logger";
-import { omit } from "lodash";
+import { omit, map } from "lodash";
 import axios from "axios";
 
 const Filter = ({
@@ -138,7 +138,14 @@ const Filter = ({
   );
 };
 
-const Main = ({ data, setFilterDropdownActive, filterDrowndownActive }) => {
+const Main = ({
+  data,
+  setFilterDropdownActive,
+  filterDrowndownActive,
+  activefilterDropdownValue,
+  filterOptions,
+  changeOrderFilter,
+}) => {
   const PokemonCard = ({ name, id, types }) => {
     const Type = ({ type }) => {
       return <span className={`${type.toLowerCase()}-type-color`}>{type}</span>;
@@ -177,7 +184,7 @@ const Main = ({ data, setFilterDropdownActive, filterDrowndownActive }) => {
             setFilterDropdownActive(state);
           }}
         >
-          <span id="selected-filter">Ascending PokeID</span>{" "}
+          <span id="selected-filter">{activefilterDropdownValue}</span>{" "}
           <span className="trigger-arrow-container display-flex-center">
             <i className="rotate-45deg" id="trigger-select-arrow"></i>
           </span>
@@ -188,10 +195,17 @@ const Main = ({ data, setFilterDropdownActive, filterDrowndownActive }) => {
           }`}
           id="custom-options-selection"
         >
-          <li className="background-transition">Ascending PokeID</li>
-          <li className="background-transition">Descending PokeID</li>
-          <li className="background-transition">A-Z</li>
-          <li className="background-transition">Z-A</li>
+          {map(filterOptions, (option, idx) =>
+            option !== activefilterDropdownValue ? (
+              <li
+                key={idx}
+                className="background-transition"
+                onClick={() => changeOrderFilter(option)}
+              >
+                {option}
+              </li>
+            ) : undefined
+          )}
         </ul>
       </div>
     );
@@ -224,14 +238,39 @@ const Home = () => {
   const [searchValue, setSearchValue] = useState("");
   const [isAdvanceFilter, setIsAdvanceFilter] = useState(false);
   const types = [...common.pokemonTypes];
+  // for drop down filter
   const [filterDrowndownActive, setFilterDropdownActive] = useState(false);
+  const filterOptions = {
+    ascending: "Ascending PokeID",
+    descending: "Descending PokeID",
+    AZ: "A-Z",
+    ZA: "Z-A",
+  };
+  const [activefilterDropdownValue, setActiveFilterDropdownValue] = useState(
+    filterOptions.ascending
+  );
 
   const applyAdvanceFilter = (type, isActive) => {
     var filterTypes = { ...appliedFilters };
     if (isActive) filterTypes[type] = isActive;
     else filterTypes = omit(filterTypes, [type]);
-    logger.info(filterTypes);
     setAppliedFilters(filterTypes);
+  };
+
+  const changeOrderFilter = (filterName) => {
+    logger.info("Filter name changing to: ", filterName);
+    setActiveFilterDropdownValue(filterName);
+    setFilterDropdownActive(false);
+    setData(null);
+    axios
+      .get(`http://127.0.0.1:8080/filterPokemons?filterOption=${filterName}`)
+      .then((res) => {
+        const res_data = res.data;
+        setData(res_data.pokemons);
+      })
+      .catch((error) => {
+        logger.error(error);
+      });
   };
 
   useEffect(() => {
@@ -239,7 +278,6 @@ const Home = () => {
       .get(`http://127.0.0.1:8080/getPokemons`)
       .then((res) => {
         const res_data = res.data;
-        logger.info("Fetched data from home: ", res_data);
         setData(res_data.pokemons);
       })
       .catch((error) => {
@@ -262,6 +300,9 @@ const Home = () => {
         data={data}
         filterDrowndownActive={filterDrowndownActive}
         setFilterDropdownActive={setFilterDropdownActive}
+        activefilterDropdownValue={activefilterDropdownValue}
+        filterOptions={filterOptions}
+        changeOrderFilter={changeOrderFilter}
       />
     </>
   );

@@ -5,7 +5,7 @@ const error = chalk.bold.red;
 const warning = chalk.bold.hex("#FFA500");
 const info = chalk.bold.green;
 
-const log = (type, ...msg) => {
+const log = (type, msg) => {
   const logMessage = chain(msg)
     .map((arg) => (typeof arg === "object" ? JSON.stringify(arg) : arg))
     .join("")
