@@ -138,7 +138,12 @@ const Filter = ({
   );
 };
 
-const Main = ({ data, setFilterDropdownActive, filterDrowndownActive }) => {
+const Main = ({
+  data,
+  setFilterDropdownActive,
+  filterDrowndownActive,
+  selectedDropdownFilter,
+}) => {
   const PokemonCard = ({ name, id, types }) => {
     const Type = ({ type }) => {
       return <span className={`${type.toLowerCase()}-type-color`}>{type}</span>;
@@ -188,7 +193,12 @@ const Main = ({ data, setFilterDropdownActive, filterDrowndownActive }) => {
           }`}
           id="custom-options-selection"
         >
-          <li className="background-transition">Ascending PokeID</li>
+          <li
+            className="background-transition"
+            onClick={selectedDropdownFilter}
+          >
+            Ascending PokeID
+          </li>
           <li className="background-transition">Descending PokeID</li>
           <li className="background-transition">A-Z</li>
           <li className="background-transition">Z-A</li>
@@ -224,7 +234,17 @@ const Home = () => {
   const [searchValue, setSearchValue] = useState("");
   const [isAdvanceFilter, setIsAdvanceFilter] = useState(false);
   const types = [...common.pokemonTypes];
+  // for drop down filter
   const [filterDrowndownActive, setFilterDropdownActive] = useState(false);
+  const filterOptions = {
+    ascending: "Ascending PokeID",
+    descending: "Descending PokeID",
+    AZ: "A-Z",
+    ZA: "Z-A",
+  };
+  const [filterDropdownValue, setFilterDropdownValue] = useState(
+    filterOptions.ascending
+  );
 
   const applyAdvanceFilter = (type, isActive) => {
     var filterTypes = { ...appliedFilters };
@@ -232,6 +252,10 @@ const Home = () => {
     else filterTypes = omit(filterTypes, [type]);
     logger.info(filterTypes);
     setAppliedFilters(filterTypes);
+  };
+
+  const selectedDropdownFilter = (event) => {
+    console.log(event);
   };
 
   useEffect(() => {
@@ -262,6 +286,7 @@ const Home = () => {
         data={data}
         filterDrowndownActive={filterDrowndownActive}
         setFilterDropdownActive={setFilterDropdownActive}
+        selectedDropdownFilter={selectedDropdownFilter}
       />
     </>
   );
