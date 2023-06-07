@@ -2,7 +2,7 @@ from flask import request
 import json
 from . import db, DB_NAME, app
 from os import path
-from server.database import queries, getAllPokemons, getPokemonByPokeName
+from server.database import queries, getAllPokemons, getPokemonByPokeName, getPokemonsByOrder
 from utils.logger import Logger
 
 @app.route("/", methods=['GET'])
@@ -11,13 +11,18 @@ def welcome():
 
 @app.route("/getPokemonByName", methods=['GET'])
 def getPokemonByName():
-    pokemonName = request.args.get('pokemonName')
-    Logger.info("Pokemon name is ", pokemonName)
-    return getPokemonByPokeName(pokemonName)
+    pokemon_name = request.args.get('pokemonName')
+    return getPokemonByPokeName(pokemon_name)
 
 @app.route("/getPokemons", methods=['GET'])
 def getPokemons():
     return getAllPokemons()
+
+
+@app.route("/filterPokemons", methods=['GET'])
+def getPokemonsByFilter():
+    filter_option = request.args.get('filterOption')
+    return getPokemonsByOrder(filter_option)
 
 def create_app():
     app.config['SECRET_KEY'] = 'secret_key' # Secure the cookie or session data
