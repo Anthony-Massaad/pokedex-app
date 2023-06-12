@@ -15,12 +15,13 @@ const Filter = ({
   setIsAdvanceFilter,
   onSearch,
 }) => {
-  const FilterButton = ({ name, id }) => {
+  const FilterButton = ({ name, id, click }) => {
     return (
       <div
         className="filter-button background-transition"
         id={id}
         role="button"
+        onClick={click}
       >
         {name}
       </div>
@@ -109,8 +110,8 @@ const Filter = ({
               ))}
             </ul>
             <div className="filter-button-wrap" style={{ marginTop: "1rem" }}>
-              <FilterButton name="Filter" id="filter" />
-              <FilterButton name="Reset" id="reset" />
+              <FilterButton name="Filter" id="filter" click={onSearch} />
+              <FilterButton name="Reset" id="reset" click={undefined} />
             </div>
           </div>
         </div>
