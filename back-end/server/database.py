@@ -1,4 +1,7 @@
 from sqlalchemy.sql import func
+from sqlalchemy.orm import joinedload
+from sqlalchemy import or_
+
 from collections import defaultdict
 from . import db
 from utils.logger import Logger
@@ -165,47 +168,60 @@ def getPokemonByPokeName(name):
     print("-----------------------------------")
     return json_data
 
-def getPokemonsByOrder(filter_order):
-    Logger.info("Selecting pokmeons by order: ", filter_order)
-    print("------------------------------------")
-
-    filter_options = {
-        "Ascending PokeID": 1,
-        "Descending PokeID": 2,
-        "A-Z": 3,
-        "Z-A": 4,
+def pokemonSearch(name, filter, order):
+    Logger.info("Entering pokemon search")
+    print("-----------------------------------------")
+    order_options = {
+        "Ascending PokeID": Pokemon.id.asc(),
+        "Descending PokeID": Pokemon.id.desc(),
+        "A-Z": Pokemon.poke_name,
+        "Z-A": Pokemon.poke_name.desc(),
     };
     
-    order = filter_options[filter_order]
-    query = None
-    if order == filter_options["Ascending PokeID"]:
-        query = db.session.query(Pokemon.poke_name, Pokemon.poke_id, Pokemon.id, func.group_concat(Type.attr_name)).join(Type, Pokemon.poke_name == Type.poke_name).order_by(Pokemon.id.asc()).group_by(Pokemon.poke_name)
-    elif order == filter_options["Descending PokeID"]:
-        query = db.session.query(Pokemon.poke_name, Pokemon.poke_id, Pokemon.id, func.group_concat(Type.attr_name)).join(Type, Pokemon.poke_name == Type.poke_name).order_by(Pokemon.id.desc()).group_by(Pokemon.poke_name)
-    elif order == filter_options["A-Z"]:
-        query = db.session.query(Pokemon.poke_name, Pokemon.poke_id, Pokemon.id, func.group_concat(Type.attr_name)).join(Type, Pokemon.poke_name == Type.poke_name).order_by(Pokemon.poke_name).group_by(Pokemon.poke_name)
-    elif order == filter_options["Z-A"]:
-        query = db.session.query(Pokemon.poke_name, Pokemon.poke_id, Pokemon.id, func.group_concat(Type.attr_name)).join(Type, Pokemon.poke_name == Type.poke_name).order_by(Pokemon.poke_name.desc()).group_by(Pokemon.poke_name)
-    else:
-        Logger.error("UNKNOWN ORDER SELECTED QUERY: ", query)
+    query = db.session.query(Pokemon.poke_name, Pokemon.poke_id, Pokemon.id)
     
-    results = query.all()  # Execute the query and fetch all the results
+    if name: 
+        Logger.info("Pokemon Search has Name: ", name)
+        query = query.filter(Pokemon.poke_name.ilike(f"%{name}%"))
+    else:
+        Logger.warn("Pokemon Search has no Name Parameters: ", name)
+    
+    if filter:
+        Logger.info("Pokemon Search has Filter: ", filter)
+        filter_condition = filter.split(",")
+        filter_query = []
+        for filter_item in filter_condition:
+            filter_query.append(
+                Type.attr_name == filter_item
+            )
+        query = query.join(Type).filter(or_(*filter_query))
+    else:
+        Logger.warn("Pokemon Search has no filter: ", filter)
+    
+    order_option = order_options.get(order)
+    if order in order_options:
+        Logger.info("Pokemon Search order: ", order)
+        query = query.order_by(order_option)
+    else:
+        Logger.error("Pokemon Search order unknown: ", order)
+        
+    results = query.all()
+    print(len(results))
     poke_dict = defaultdict(list)
     poke_dict["pokemons"] = []
     for record in results:
+        types = db.session.query(Pokemon.poke_name, func.group_concat(Type.attr_name.distinct())).join(Type, record[0] == Type.poke_name).all()        
         data = {
             "poke_name": record[0],
             "poke_id": record[1],
             "id": record[2],
-            "types": record[3].split(","),
+            "types": types[0][1].split(",")
         }
         poke_dict["pokemons"].append(data)
-        
-    json_data = dict(poke_dict)
-    Logger.info("Dictionary for all pokemons is: \n", json_data)
-
+    json_data = dict(poke_dict)    
+    Logger.info("Json Data for pokemon Search: ", json_data)
     return json_data
-    
+
 
 def queries():
     # Delete all rows from the tables

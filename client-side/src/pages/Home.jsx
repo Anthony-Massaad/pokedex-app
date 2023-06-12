@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import common from "../data/common";
 import { Link } from "react-router-dom";
 import { logger } from "../utils/logger";
-import { omit, map } from "lodash";
+import { omit, map, isEmpty, chain } from "lodash";
 import axios from "axios";
 
 const Filter = ({
@@ -13,6 +13,7 @@ const Filter = ({
   isAdvanceFilter,
   types,
   setIsAdvanceFilter,
+  onSearch,
 }) => {
   const FilterButton = ({ name, id }) => {
     return (
@@ -36,7 +37,6 @@ const Filter = ({
             onClick={() => {
               const state = !appliedFilters[type];
               applyAdvanceFilter(type, state);
-              logger.info(`radio button for type ${type} is set to ${state}`);
             }}
           ></span>
           <span className={`type ${type.toLowerCase()}-type-color`}>
@@ -63,7 +63,6 @@ const Filter = ({
                 value={searchValue}
                 onChange={(event) => {
                   const val = event.target.value || "";
-                  logger.info(`Search field input is ${val}`);
                   setSearchValue(val);
                 }}
               />
@@ -72,6 +71,7 @@ const Filter = ({
                 value={common.labels.search}
                 id="search"
                 className="background-transition"
+                onClick={onSearch}
               />
             </div>
             <p className="additional-info">
@@ -258,20 +258,15 @@ const Home = () => {
   };
 
   const changeOrderFilter = (filterName) => {
-    logger.info("Filter name changing to: ", filterName);
     setActiveFilterDropdownValue(filterName);
     setFilterDropdownActive(false);
     setData(null);
-    axios
-      .get(`http://127.0.0.1:8080/filterPokemons?filterOption=${filterName}`)
-      .then((res) => {
-        const res_data = res.data;
-        setData(res_data.pokemons);
-      })
-      .catch((error) => {
-        logger.error(error);
-      });
+    onSearch();
   };
+
+  useEffect(() => {
+    onSearch();
+  }, [activefilterDropdownValue]);
 
   useEffect(() => {
     axios
@@ -285,6 +280,33 @@ const Home = () => {
       });
   }, []);
 
+  const onSearch = () => {
+    let name = "";
+    let filters = "";
+    if (!isEmpty(appliedFilters)) {
+      filters = `&filters=${chain(appliedFilters)
+        .keysIn(appliedFilters)
+        .join(",")
+        .value()}`;
+    }
+
+    if (!isEmpty(searchValue)) {
+      name = `&pokeName=${searchValue}`;
+    }
+
+    axios
+      .get(
+        `http://127.0.0.1:8080/searchPokemons?order=${activefilterDropdownValue}${name}${filters}`
+      )
+      .then((res) => {
+        const res_data = res.data;
+        setData(res_data.pokemons);
+      })
+      .catch((error) => {
+        logger.error(error);
+      });
+  };
+
   return (
     <>
       <Filter
@@ -295,6 +317,7 @@ const Home = () => {
         isAdvanceFilter={isAdvanceFilter}
         setIsAdvanceFilter={setIsAdvanceFilter}
         types={types}
+        onSearch={onSearch}
       />
       <Main
         data={data}
