@@ -14,6 +14,20 @@ const common = {
     sign_up_modal_input_1: "Create Username",
     sign_up_modal_input_2: "Create Password",
   },
+  modalErrors: {
+    keys: {
+      username: "username",
+      password: "password",
+      signInSubmit: "sign_in",
+      signUpSubmit: "sign_up",
+    },
+    errors: {
+      required: "Field is required",
+      spaces: "No spaces allowed",
+      signInSubmit: "Username or Password is incorrect",
+      signUpSubmit: "Username already taken",
+    },
+  },
   footer: {
     copyright: "@copyright 2022 Anthony Massaad",
   },

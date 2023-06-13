@@ -1,11 +1,12 @@
 from sqlalchemy.sql import func
-from sqlalchemy.orm import joinedload
 from sqlalchemy import or_
-
+from werkzeug.security import generate_password_hash, check_password_hash
+from flask_login import UserMixin
 from collections import defaultdict
-from . import db
+from flask_sqlalchemy import SQLAlchemy
 from utils.logger import Logger
 
+db = SQLAlchemy()
 STRING_LENGTH = 1000
  
 # Creates a database model and archetecture for consistency 
@@ -29,9 +30,19 @@ class Weakness(db.Model):
     
     pokemon_rel = db.relationship("Pokemon", foreign_keys=[poke_name])
 
-class User(db.Model):
-    username = db.Column(db.String(STRING_LENGTH), primary_key=True)
+class User(db.Model, UserMixin):
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    username = db.Column(db.String(STRING_LENGTH), unique=True)
     password = db.Column(db.String(STRING_LENGTH))
+    
+    def is_authenticated(self): 
+        return True
+    
+    def to_json(self):        
+        return {
+            "username": self.username,
+            "id": self.id
+            }
 
 class Evolution(db.Model):
     evolution_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
@@ -222,6 +233,12 @@ def pokemonSearch(name, filter, order):
     Logger.info("Json Data for pokemon Search: ", json_data)
     return json_data
 
+def signIn(username, password): 
+    user = User.query.filter_by(username=username).first()
+    if user and check_password_hash(user.password, password):
+        return user
+    return None
+        
 
 def queries():
     # Delete all rows from the tables
@@ -305,6 +322,8 @@ def queries():
     db.session.add(Evolution(poke_name="Charizard", poke_name_evolution="Charmander"))
     db.session.add(Evolution(poke_name="Charizard", poke_name_evolution="Charmeleon"))
     db.session.add(Evolution(poke_name="Charizard", poke_name_evolution="Charizard"))
+    
+    db.session.add(User(username="tony1bally", password=generate_password_hash("tony", method='scrypt')))
     
     db.session.commit()
     # getAllPokemons()

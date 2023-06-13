@@ -1,13 +1,26 @@
-from flask import request
-import json
-from . import db, DB_NAME, app
-from os import path
-from server.database import queries, getAllPokemons, getPokemonByPokeName, pokemonSearch
-from utils.logger import Logger
+from flask import request, session, Flask
+from server.database import queries, getAllPokemons, getPokemonByPokeName, pokemonSearch, signIn, db
+from flask_cors import CORS
 
-@app.route("/", methods=['GET'])
+app = Flask(__name__)
+
+DB_NAME = "database.db"
+
+app.config['SECRET_KEY'] = 'Very Secret Key'
+app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{DB_NAME}'
+print(app.config)
+db.init_app(app)
+CORS(app)
+
+@app.route("/")
 def welcome():
-    return "Welcome to the pokedex API!"
+    return "Welcome to Pokedex API"
+
+@app.route("/check", methods=['GET'])
+def check():
+    print(session)
+    username = session.get("username")
+    return "cddd"
 
 @app.route("/getPokemonByName", methods=['GET'])
 def getPokemonByName():
@@ -18,26 +31,34 @@ def getPokemonByName():
 def getPokemons():
     return getAllPokemons()
 
-
 @app.route("/searchPokemons", methods=["GET"])
 def searchPokemons():
+    print(session)
     filters = request.args.get("filters")
     name = request.args.get("pokeName")
     order = request.args.get("order")
     return pokemonSearch(name, filters, order)
-    
+
+@app.route("/login", methods=["GET"])
+def login():
+    username = request.args.get("username")
+    password = request.args.get("password")
+    user = signIn(username, password)
+    if user:
+        session['username'] = username
+        print(session)
+        return {
+            "response": True,
+            "username": username
+        }
+    return {
+        "response": False
+    }
 
 def create_app():
-    app.config['SECRET_KEY'] = 'secret_key' # Secure the cookie or session data
-    app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{DB_NAME}'
-
-    db.init_app(app) # takes the databse and applies the app to it
-    # if not path.exists(f"instance/{DB_NAME}"):
     with app.app_context():
-        
         db.create_all()
         queries()
-
 
 def run_server():
     create_app()
