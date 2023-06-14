@@ -7,6 +7,7 @@ const Header = ({
   isSignedIn,
   setDisplaySignInModal,
   setDisplaySignUpModal,
+  user,
   children,
 }) => {
   const Button = ({ isFor, text, click }) => {
@@ -33,7 +34,7 @@ const Header = ({
           {isSignedIn ? (
             <div className="header-user-signed-in">
               <div className="user-signed-in">
-                <strong>Filler</strong>
+                <strong>{user.username}</strong>
                 <img src={avatar} alt="" />
               </div>
               <Link to="/favorites">View Favorites</Link>

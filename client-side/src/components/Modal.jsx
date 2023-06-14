@@ -14,6 +14,7 @@ const Modal = ({
   setDisplaySignInModal,
   setDisplaySignUpModal,
   signIn,
+  setToken,
 }) => {
   const [usernameInput, setUsernameInput] = useState("");
   const [passwordInput, setPasswordInput] = useState("");
@@ -85,7 +86,8 @@ const Modal = ({
       if (!isInvalidSignInInput()) {
         axios
           .get(
-            `http://127.0.0.1:8080/login?username=${usernameInput}&password=${passwordInput}`, {credentials: "include"}
+            `http://127.0.0.1:8080/login?username=${usernameInput}&password=${passwordInput}`,
+            { credentials: "include" }
           )
           .then((res) => {
             const res_data = res.data;
@@ -93,6 +95,7 @@ const Modal = ({
             if (res_data.response) {
               setDisplaySignInModal(false);
               signIn(res_data.response, res_data.username);
+              setToken(res_data.access_token);
             }
           })
           .catch((error) => {

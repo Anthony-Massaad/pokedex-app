@@ -9,29 +9,42 @@ import common from "./data/common";
 import Modal from "./components/Modal";
 import axios from "axios";
 import { logger } from "./utils/logger";
-// import { getCookie, setCookie } from "./utils/Cookie";
+import UseToken from "./utils/UseToken";
 
 const App = () => {
+  const { token, removeToken, setToken } = UseToken();
   const [isSignedIn, setIsSignedIn] = useState(false);
-  const [user, setUser] = useState("");
+  const [user, setUser] = useState({username: ''});
   const [displaySignInModal, setDisplaySignInModal] = useState(false);
   const [displaySignUpModal, setDisplaySignUpModal] = useState(false);
 
   const signIn = (isLogIn, username) => {
     setIsSignedIn(isLogIn);
-    setUser(username);
+    const tpm = {...user}
+    tpm.username = username
+    setUser(tpm);
   };
 
   useEffect(() => {
-    axios
-      .get(`http://127.0.0.1:8080/check`, { credentials: "include" })
-      .then((res) => {
-        console.log(res);
-      })
-      .catch((err) => {
-        logger.error(err);
-      });
-  }, []);
+    console.log(token);
+    if (token) {
+      axios
+        .get(`http://127.0.0.1:8080/check`, {
+          headers: {
+            Authorization: "Bearer " + token,
+          },
+        })
+        .then((res) => {
+          const data = res.data;
+          console.log(data);
+          data.access_token && setToken(data.access_token);
+          signIn(data.response, data.username);
+        })
+        .catch((err) => {
+          logger.error(err);
+        });
+    }
+  }, [token]);
 
   return (
     <>
@@ -40,6 +53,7 @@ const App = () => {
           isSignedIn={isSignedIn}
           setDisplaySignInModal={setDisplaySignInModal}
           setDisplaySignUpModal={setDisplaySignUpModal}
+          user={user}
         >
           <Modal
             title={common.header.sign_in}
@@ -49,6 +63,7 @@ const App = () => {
             setDisplaySignInModal={setDisplaySignInModal}
             setDisplaySignUpModal={setDisplaySignUpModal}
             signIn={signIn}
+            setToken={setToken}
           />
           <Modal
             title={common.header.sign_up}
@@ -58,6 +73,7 @@ const App = () => {
             setDisplaySignInModal={setDisplaySignInModal}
             setDisplaySignUpModal={setDisplaySignUpModal}
             signIn={signIn}
+            setToken={setToken}
           />
         </Header>
         <ScrollToTop>
