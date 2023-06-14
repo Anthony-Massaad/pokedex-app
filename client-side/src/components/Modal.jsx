@@ -34,19 +34,7 @@ const Modal = ({
     setActiveErrors(errors);
   };
 
-  const isValidSignUpInputs = () => {
-    if (isEmpty(usernameInput)) {
-      return "required field";
-    }
-
-    if (includes(usernameInput, " ")) {
-      return "No spaces allowed";
-    }
-
-    return true;
-  };
-
-  const isInvalidSignInInput = () => {
+  const isInvalidInput = () => {
     var hasError = false;
     const errors = {};
     if (isEmpty(usernameInput)) {
@@ -82,8 +70,8 @@ const Modal = ({
   };
 
   const onSubmit = () => {
-    if (title === common.header.sign_in) {
-      if (!isInvalidSignInInput()) {
+    if (!isInvalidInput()) {
+      if (title === common.header.sign_in) {
         axios
           .get(
             `http://127.0.0.1:8080/login?username=${usernameInput}&password=${passwordInput}`
@@ -95,14 +83,40 @@ const Modal = ({
               setDisplaySignInModal(false);
               signIn(res_data.response, res_data.username);
               setToken(res_data.access_token);
+            } else {
+              const errors = {};
+              errors[common.modalErrors.keys.signInSubmit] =
+                common.modalErrors.errors.signInSubmit;
+              setActiveErrors(errors);
+            }
+          })
+          .catch((error) => {
+            logger.error(error);
+          });
+      } else {
+        // post
+        axios
+          .post(
+            `http://127.0.0.1:8080/signUp?username=${usernameInput}&password=${passwordInput}`
+          )
+          .then((res) => {
+            const res_data = res.data;
+            logger.info(res_data);
+            if (res_data.response) {
+              setDisplaySignUpModal(false);
+              signIn(res_data.response, res_data.username);
+              setToken(res_data.access_token);
+            } else {
+              const errors = {};
+              errors[common.modalErrors.keys.signUpSubmit] =
+                common.modalErrors.errors.signUpSubmit;
+              setActiveErrors(errors);
             }
           })
           .catch((error) => {
             logger.error(error);
           });
       }
-    } else {
-      // post
     }
   };
 

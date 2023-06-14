@@ -1,6 +1,6 @@
 from flask import request, Flask
 from server.database import queries, getAllPokemons, getPokemonByPokeName, \
-    pokemonSearch, signIn, db
+    pokemonSearch, signIn, db, createAccount
 from flask_cors import CORS
 from datetime import datetime, timedelta, timezone
 from flask_jwt_extended import create_access_token,get_jwt,get_jwt_identity, \
@@ -84,6 +84,24 @@ def login():
     return {
         "response": False
     }
+
+@app.route("/signUp", methods=['POST'])
+def signUp():
+    username = request.args.get("username")
+    password = request.args.get("password")
+    user = createAccount(username, password)
+    Logger.info("CREATE USER: ", None)
+    if user:
+        access_token = create_access_token(identity=username)
+        return {
+            "response": True,
+            "username": username,
+            "access_token": access_token
+        }
+    return {
+        "response": False
+    }
+
 
 def create_app():
     with app.app_context():

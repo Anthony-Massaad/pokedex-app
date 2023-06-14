@@ -228,7 +228,15 @@ def signIn(username, password):
     if user and check_password_hash(user.password, password):
         return user
     return None
-        
+
+def createAccount(username, password):
+    user = User.query.filter_by(username=username).first()    
+    if not user:
+        new_user = User(username=username, password=generate_password_hash(password, method='scrypt'))
+        db.session.add(new_user)
+        db.session.commit()
+        return new_user
+    return None
 
 def queries():
     # Delete all rows from the tables
