@@ -22,7 +22,16 @@ const App = () => {
     setUser(username);
   };
 
-  useEffect(() => {}, []);
+  useEffect(() => {
+    axios
+      .get(`http://127.0.0.1:8080/check`, { credentials: "include" })
+      .then((res) => {
+        console.log(res);
+      })
+      .catch((err) => {
+        logger.error(err);
+      });
+  }, []);
 
   return (
     <>

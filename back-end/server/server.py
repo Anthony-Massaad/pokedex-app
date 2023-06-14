@@ -8,9 +8,8 @@ DB_NAME = "database.db"
 
 app.config['SECRET_KEY'] = 'Very Secret Key'
 app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{DB_NAME}'
-print(app.config)
 db.init_app(app)
-CORS(app)
+CORS(app, supports_credentials=True)
 
 @app.route("/")
 def welcome():
@@ -20,7 +19,15 @@ def welcome():
 def check():
     print(session)
     username = session.get("username")
-    return "cddd"
+    if username:
+        return {
+            "response": True,
+            "username": username
+        }
+    
+    return {
+        "response": False
+    }
 
 @app.route("/getPokemonByName", methods=['GET'])
 def getPokemonByName():

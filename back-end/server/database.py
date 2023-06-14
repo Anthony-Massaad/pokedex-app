@@ -1,7 +1,6 @@
 from sqlalchemy.sql import func
 from sqlalchemy import or_
 from werkzeug.security import generate_password_hash, check_password_hash
-from flask_login import UserMixin
 from collections import defaultdict
 from flask_sqlalchemy import SQLAlchemy
 from utils.logger import Logger
@@ -30,19 +29,10 @@ class Weakness(db.Model):
     
     pokemon_rel = db.relationship("Pokemon", foreign_keys=[poke_name])
 
-class User(db.Model, UserMixin):
+class User(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     username = db.Column(db.String(STRING_LENGTH), unique=True)
     password = db.Column(db.String(STRING_LENGTH))
-    
-    def is_authenticated(self): 
-        return True
-    
-    def to_json(self):        
-        return {
-            "username": self.username,
-            "id": self.id
-            }
 
 class Evolution(db.Model):
     evolution_id = db.Column(db.Integer, primary_key=True, autoincrement=True)

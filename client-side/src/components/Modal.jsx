@@ -85,7 +85,7 @@ const Modal = ({
       if (!isInvalidSignInInput()) {
         axios
           .get(
-            `http://127.0.0.1:8080/login?username=${usernameInput}&password=${passwordInput}`
+            `http://127.0.0.1:8080/login?username=${usernameInput}&password=${passwordInput}`, {credentials: "include"}
           )
           .then((res) => {
             const res_data = res.data;
