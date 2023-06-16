@@ -78,7 +78,6 @@ const Modal = ({
           )
           .then((res) => {
             const res_data = res.data;
-            logger.info(res_data);
             if (res_data.response) {
               setDisplaySignInModal(false);
               signIn(res_data.response, res_data.username);
@@ -101,7 +100,6 @@ const Modal = ({
           )
           .then((res) => {
             const res_data = res.data;
-            logger.info(res_data);
             if (res_data.response) {
               setDisplaySignUpModal(false);
               signIn(res_data.response, res_data.username);

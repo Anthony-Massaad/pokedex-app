@@ -11,43 +11,42 @@ STRING_LENGTH = 1000
 # Creates a database model and archetecture for consistency 
 class Pokemon(db.Model):
     poke_name = db.Column(db.String(STRING_LENGTH), unique=True, primary_key=True)
-    poke_id = db.Column(db.String(STRING_LENGTH), unique=True)
-    id = db.Column(db.Integer, unique=True)
-    poke_description = db.Column(db.String(STRING_LENGTH))
+    poke_id = db.Column(db.String(STRING_LENGTH), unique=True, nullable=False)
+    id = db.Column(db.Integer, unique=True, nullable=False)
+    poke_description = db.Column(db.String(STRING_LENGTH), nullable=False)
 
 class Type(db.Model):
     type_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    poke_name = db.Column(db.String(STRING_LENGTH), db.ForeignKey('pokemon.poke_name'))
-    attr_name =  db.Column(db.String(STRING_LENGTH))
+    poke_name = db.Column(db.String(STRING_LENGTH), db.ForeignKey('pokemon.poke_name'), nullable=False)
+    attr_name =  db.Column(db.String(STRING_LENGTH), nullable=False)
     
     pokemon_rel = db.relationship("Pokemon", foreign_keys=[poke_name])
 
 class Weakness(db.Model):
     weakness_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    poke_name = db.Column(db.String(STRING_LENGTH), db.ForeignKey('pokemon.poke_name'))
-    attr_name =  db.Column(db.String(STRING_LENGTH))
+    poke_name = db.Column(db.String(STRING_LENGTH), db.ForeignKey('pokemon.poke_name'), nullable=False)
+    attr_name =  db.Column(db.String(STRING_LENGTH), nullable=False)
     
     pokemon_rel = db.relationship("Pokemon", foreign_keys=[poke_name])
 
 class User(db.Model):
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    username = db.Column(db.String(STRING_LENGTH), unique=True)
-    password = db.Column(db.String(STRING_LENGTH))
+    username = db.Column(db.String(STRING_LENGTH), primary_key=True)
+    password = db.Column(db.String(STRING_LENGTH), nullable=False)
 
 class Evolution(db.Model):
     evolution_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    poke_name = db.Column(db.String(STRING_LENGTH), db.ForeignKey('pokemon.poke_name'))
-    poke_name_evolution = db.Column(db.String(STRING_LENGTH), db.ForeignKey('pokemon.poke_name'))
+    poke_name = db.Column(db.String(STRING_LENGTH), db.ForeignKey('pokemon.poke_name'), nullable=False)
+    poke_name_evolution = db.Column(db.String(STRING_LENGTH), db.ForeignKey('pokemon.poke_name'), nullable=False)
     
     pokemon_rel = db.relationship("Pokemon", foreign_keys=[poke_name])
 
-# class Favorites(db.Model): 
-#     favorite_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-#     username = db.Column(db.String(STRING_LENGTH), db.ForeignKey('User.username'))
-#     poke_name = db.Column(db.String(STRING_LENGTH), db.ForeignKey('pokemon.poke_name'))
+class Favorites(db.Model): 
+    favorite_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    username = db.Column(db.String(STRING_LENGTH), db.ForeignKey('user.username'), nullable=False)
+    poke_name = db.Column(db.String(STRING_LENGTH), db.ForeignKey('pokemon.poke_name'), nullable=False)
     
-#     user_rel = db.relationship("User", foreign_keys=[username])
-#     pokemon_rel = db.relationship("Pokemon", foreign_keys=[poke_name])
+    user_rel = db.relationship("User", foreign_keys=[username])
+    pokemon_rel = db.relationship("Pokemon", foreign_keys=[poke_name])
 
 def getAllPokemons():
     query = db.session.query(Pokemon.poke_name, Pokemon.poke_id, Pokemon.id, func.group_concat(Type.attr_name)).join(Type, Pokemon.poke_name == Type.poke_name).order_by(Pokemon.id.asc()).group_by(Pokemon.poke_name)
@@ -237,6 +236,12 @@ def createAccount(username, password):
         db.session.commit()
         return new_user
     return None
+
+def addFavorites(username, poke_name):
+    Logger.info("ENTERED FAVORITES: username=", username, " poke_name=", poke_name)
+    fav = Favorites(username=username, poke_name=poke_name)
+    db.session.add(fav)
+    db.session.commit()
 
 def queries():
     # Delete all rows from the tables

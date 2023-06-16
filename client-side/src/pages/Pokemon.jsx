@@ -30,20 +30,18 @@ const Evolution = ({ pokeName, pokeId, types }) => {
   );
 };
 
-const Pokemon = () => {
+const Pokemon = ({ onFavoriteClick }) => {
   const [data, setData] = useState(null);
   const [pokemonData, setPokemonData] = useState(null);
   const [evolutionData, setEvolutionData] = useState(null);
   const [nextPokemon, setNextPokemon] = useState(null);
   const [previousPokemon, setPreviousPokemon] = useState(null);
   const { pokemonName } = useParams();
-  logger.info("Pokemon Name: ", pokemonName);
 
   useEffect(() => {
     axios
       .get(`http://127.0.0.1:8080/getPokemonByName?pokemonName=${pokemonName}`)
       .then((res) => {
-        logger.info(res);
         const fetchedData = res.data;
         setData(fetchedData);
         setPokemonData(fetchedData.pokemon);
@@ -86,7 +84,14 @@ const Pokemon = () => {
           </div>
           <div className="container single-pokemon-title">
             <div className="display-flex-center">
-              <div className="favorite-star"></div>
+              <div
+                className="favorite-star"
+                id={pokemonData.id}
+                role="button"
+                onClick={() =>
+                  onFavoriteClick(pokemonData.id, pokemonData.poke_name)
+                }
+              ></div>
               {pokemonData.poke_name} <span>#{pokemonData.poke_id}</span>
             </div>
           </div>

@@ -146,6 +146,7 @@ const Main = ({
   activefilterDropdownValue,
   filterOptions,
   changeOrderFilter,
+  onFavoriteClick,
 }) => {
   const PokemonCard = ({ name, id, types }) => {
     const Type = ({ type }) => {
@@ -154,7 +155,12 @@ const Main = ({
 
     return (
       <li>
-        <div className="favorite-star" id={id}></div>
+        <div
+          className="favorite-star"
+          id={id}
+          role="button"
+          onClick={() => onFavoriteClick(id, name)}
+        ></div>
         <Link to={`/pokemons/${name}`}>
           <img
             src={`https://assets.pokemon.com/assets/cms2/img/pokedex/detail/${id}.png`}
@@ -233,7 +239,7 @@ const Main = ({
   );
 };
 
-const Home = () => {
+const Home = ({ onFavoriteClick }) => {
   const [data, setData] = useState(null);
   const [appliedFilters, setAppliedFilters] = useState({});
   const [searchValue, setSearchValue] = useState("");
@@ -327,6 +333,7 @@ const Home = () => {
         activefilterDropdownValue={activefilterDropdownValue}
         filterOptions={filterOptions}
         changeOrderFilter={changeOrderFilter}
+        onFavoriteClick={onFavoriteClick}
       />
     </>
   );

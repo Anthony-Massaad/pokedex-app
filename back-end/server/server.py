@@ -1,6 +1,6 @@
-from flask import request, Flask
+from flask import request, Flask, jsonify
 from server.database import queries, getAllPokemons, getPokemonByPokeName, \
-    pokemonSearch, signIn, db, createAccount
+    pokemonSearch, signIn, db, createAccount, addFavorites
 from flask_cors import CORS
 from datetime import datetime, timedelta, timezone
 from flask_jwt_extended import create_access_token,get_jwt,get_jwt_identity, \
@@ -102,6 +102,15 @@ def signUp():
         "response": False
     }
 
+@app.route("/addFavorite", methods=['POST'])
+def addFavourite():
+    poke_name = request.args.get("poke_name")
+    username = request.args.get("username")
+    addFavorites(username, poke_name)
+    return jsonify({
+        "success": True
+    })
+    
 
 def create_app():
     with app.app_context():

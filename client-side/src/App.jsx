@@ -14,29 +14,49 @@ import UseToken from "./utils/UseToken";
 const App = () => {
   const { token, removeToken, setToken } = UseToken();
   const [isSignedIn, setIsSignedIn] = useState(false);
-  const [user, setUser] = useState({username: ''});
+  const [user, setUser] = useState({ username: "" });
   const [displaySignInModal, setDisplaySignInModal] = useState(false);
   const [displaySignUpModal, setDisplaySignUpModal] = useState(false);
 
+  const options = {
+    headers: {
+      Authorization: "Bearer " + token,
+    },
+  };
+
   const signIn = (isLogIn, username) => {
     setIsSignedIn(isLogIn);
-    const tpm = {...user}
-    tpm.username = username
+    const tpm = { ...user };
+    tpm.username = username;
     setUser(tpm);
   };
 
+  const onFavoriteClick = (id, poke_name) => {
+    console.log("FAV ID: ", id, " NAME: ", poke_name);
+    if (isSignedIn) {
+      // do something
+      console.log("Do Something");
+      axios
+        .post(
+          `http://127.0.0.1:8080/addFavorite?poke_id=${id}&poke_name=${poke_name}&username=${user.username}}`
+        )
+        .then((res) => {
+          console.log(res);
+        })
+        .catch((err) => {
+          logger.error(err);
+        });
+    } else {
+      setDisplaySignInModal(true);
+    }
+  };
+
   useEffect(() => {
-    console.log(token);
     if (token) {
       axios
-        .get(`http://127.0.0.1:8080/check`, {
-          headers: {
-            Authorization: "Bearer " + token,
-          },
-        })
+        .get(`http://127.0.0.1:8080/check`, options)
         .then((res) => {
           const data = res.data;
-          console.log(data);
           data.access_token && setToken(data.access_token);
           signIn(data.response, data.username);
         })
@@ -78,8 +98,16 @@ const App = () => {
         </Header>
         <ScrollToTop>
           <Routes>
-            <Route path="/" exact element={<Home />} />
-            <Route path="/Pokemons/:pokemonName" exact element={<Pokemon />} />
+            <Route
+              path="/"
+              exact
+              element={<Home onFavoriteClick={onFavoriteClick} />}
+            />
+            <Route
+              path="/Pokemons/:pokemonName"
+              exact
+              element={<Pokemon onFavoriteClick={onFavoriteClick} />}
+            />
           </Routes>
         </ScrollToTop>
       </Router>
