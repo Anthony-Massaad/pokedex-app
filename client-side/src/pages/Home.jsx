@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { logger } from "../utils/logger";
 import { omit, map, isEmpty, chain } from "lodash";
 import axios from "axios";
+import { useToastProviderContext } from "../utils/toast/Toast";
 
 const Filter = ({
   appliedFilters,
@@ -256,6 +257,9 @@ const Home = ({ onFavoriteClick }) => {
   const [activefilterDropdownValue, setActiveFilterDropdownValue] = useState(
     filterOptions.ascending
   );
+
+  const setToast = useToastProviderContext();
+  console.log(setToast);
 
   const applyAdvanceFilter = (type, isActive) => {
     var filterTypes = { ...appliedFilters };
