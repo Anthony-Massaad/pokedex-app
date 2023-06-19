@@ -1,7 +1,7 @@
 import React, { useEffect, useState, createContext, useContext } from "react";
 import error from "../../assests/error.svg";
 import check from "../../assests/check.svg";
-import { map, uniqueId, filter } from "lodash";
+import { uniqueId } from "lodash";
 
 const ToastContext = createContext();
 
@@ -13,7 +13,7 @@ const ToastProvider = ({ children }) => {
       if (toastLst.length > 0) {
         applyRemoveAnimation(toastLst[0].id);
       }
-    }, 2000);
+    }, 3000);
     return () => clearInterval(deleteInterval);
   }, [toastLst]);
 
@@ -73,7 +73,6 @@ const ToastProvider = ({ children }) => {
         },
       ];
     });
-    console.log("TOASTLIST: ", toastLst);
   };
 
   const animationEnd = (id, isRemove, isAdded) => {
