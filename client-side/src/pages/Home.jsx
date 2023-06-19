@@ -287,6 +287,11 @@ const Home = ({ onFavoriteClick }) => {
       })
       .catch((error) => {
         logger.error(error);
+        setToast({
+          severity: "error",
+          title: "Load Pokemons",
+          description: "Can't Load Pokemons",
+        });
       });
   }, []);
 
