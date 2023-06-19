@@ -259,7 +259,6 @@ const Home = ({ onFavoriteClick }) => {
   );
 
   const setToast = useToastProviderContext();
-  console.log(setToast);
 
   const applyAdvanceFilter = (type, isActive) => {
     var filterTypes = { ...appliedFilters };

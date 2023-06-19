@@ -1159,7 +1159,14 @@ BEGINNING OF SINGLE POKEMON HTML CSS
   top: 12px;
   right: 12px;
   transition: transform 0.6s ease-in-out;
+}
+
+.add-toast {
   animation: toast-in-right 0.7s;
+}
+
+.remove-toast {
+  animation: toast-in-left 0.7s forwards;
 }
 
 .notification {
@@ -1251,9 +1258,9 @@ BEGINNING OF SINGLE POKEMON HTML CSS
 
 @keyframes toast-in-left {
   from {
-    transform: translateX(-100%);
+    transform: translateX(0);
   }
   to {
-    transform: translateX(0);
+    transform: translateX(120%);
   }
 }

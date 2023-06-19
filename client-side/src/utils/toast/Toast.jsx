@@ -1,12 +1,21 @@
 import React, { useEffect, useState, createContext, useContext } from "react";
 import error from "../../assests/error.svg";
 import check from "../../assests/check.svg";
-import { uniqueId } from "lodash";
+import { map, uniqueId, filter } from "lodash";
 
 const ToastContext = createContext();
 
 const ToastProvider = ({ children }) => {
   const [toastLst, setToastLst] = useState([]);
+
+  useEffect(() => {
+    const deleteInterval = setInterval(() => {
+      if (toastLst.length > 0) {
+        applyRemoveAnimation(toastLst[0].id);
+      }
+    }, 2000);
+    return () => clearInterval(deleteInterval);
+  }, [toastLst]);
 
   const severitySettings = (severity) => {
     var toastProperties = {};
@@ -31,8 +40,21 @@ const ToastProvider = ({ children }) => {
     return toastProperties;
   };
 
-  const deleteToast = (id) => {
-    setToastLst((currLst) => currLst.filter((toast) => toast.id !== id));
+  const applyRemoveAnimation = (id) => {
+    const toastToEdit = toastLst.find((toast, idx) => {
+      return toast.id === id;
+    });
+    toastToEdit.remove = true;
+
+    setToastLst((prevToastLst) =>
+      prevToastLst.map((toast, idx) => {
+        return toast.id === toastToEdit.id ? toastToEdit : toast;
+      })
+    );
+  };
+
+  const deleteToast = (id, isRemove) => {
+    setToastLst((currLst) => currLst.filter((toast, idx) => toast.id !== id));
   };
 
   const setToast = ({ severity, title, description }) => {
@@ -46,10 +68,29 @@ const ToastProvider = ({ children }) => {
           id: toastId,
           title: title,
           description: description,
+          remove: false,
+          added: true,
         },
       ];
     });
     console.log("TOASTLIST: ", toastLst);
+  };
+
+  const animationEnd = (id, isRemove, isAdded) => {
+    if (isRemove) {
+      deleteToast(id);
+    }
+    if (isAdded) {
+      const toastToEdit = toastLst.find((toast, idx) => {
+        return toast.id === id;
+      });
+      toastToEdit.added = false;
+      setToastLst((prevToastLst) =>
+        prevToastLst.map((toast, idx) => {
+          return toast.id === toastToEdit.id ? toastToEdit : toast;
+        })
+      );
+    }
   };
 
   return (
@@ -58,10 +99,16 @@ const ToastProvider = ({ children }) => {
         {toastLst.map((toast, i) => (
           <div
             key={i}
-            className={`notification toast top-right`}
+            className={`notification toast top-right ${
+              toast.remove && "remove-toast"
+            }
+            ${toast.added && "add-toast"}`}
             style={{ backgroundColor: toast.backgroundColor }}
+            onAnimationEnd={() =>
+              animationEnd(toast.id, toast.remove, toast.added)
+            }
           >
-            <button onClick={() => deleteToast(toast.id)}>X</button>
+            <button onClick={() => applyRemoveAnimation(toast.id)}>X</button>
             <div className="notification-image">
               <img src={toast.icon} alt="" />
             </div>
