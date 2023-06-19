@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { logger } from "../utils/logger";
 import axios from "axios";
 
 const Attribute = ({ attribute }) => {
@@ -50,7 +49,7 @@ const Pokemon = ({ onFavoriteClick }) => {
         setPreviousPokemon(fetchedData.previous_pokemon);
       })
       .catch((error) => {
-        logger.error(error);
+        console.error(error);
       });
   }, [pokemonName]);
 

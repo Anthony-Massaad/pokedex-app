@@ -4,7 +4,6 @@ import common from "../data/common";
 import favicon from "../assests/favicon.ico";
 import { includes, isEmpty, omit } from "lodash";
 import axios from "axios";
-import { logger } from "../utils/logger";
 import { useLocalStorageContext } from "../utils/storage/LocalStorage";
 
 const Modal = ({
@@ -91,7 +90,7 @@ const Modal = ({
             }
           })
           .catch((error) => {
-            logger.error(error);
+            console.log(error);
           });
       } else {
         // post
@@ -113,7 +112,7 @@ const Modal = ({
             }
           })
           .catch((error) => {
-            logger.error(error);
+            console.error(error);
           });
       }
     }

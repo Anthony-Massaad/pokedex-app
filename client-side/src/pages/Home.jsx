@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import common from "../data/common";
 import { Link } from "react-router-dom";
-import { logger } from "../utils/logger";
 import { omit, map, isEmpty, chain } from "lodash";
 import axios from "axios";
 import { useToastProviderContext } from "../utils/toast/Toast";
@@ -286,7 +285,7 @@ const Home = ({ onFavoriteClick }) => {
         setData(res_data.pokemons);
       })
       .catch((error) => {
-        logger.error(error);
+        console.error(error);
         setToast({
           severity: "error",
           title: "Load Pokemons",
@@ -318,7 +317,7 @@ const Home = ({ onFavoriteClick }) => {
         setData(res_data.pokemons);
       })
       .catch((error) => {
-        logger.error(error);
+        console.error(error);
       });
   };
 

@@ -8,7 +8,6 @@ import Pokemon from "./pages/Pokemon";
 import common from "./data/common";
 import Modal from "./components/Modal";
 import axios from "axios";
-import { logger } from "./utils/logger";
 import { useToastProviderContext } from "./utils/toast/Toast";
 import {
   useLocalStorageContext,
@@ -74,7 +73,7 @@ const Pokedex = () => {
           signIn(data.response, data.username);
         })
         .catch((err) => {
-          logger.error(err);
+          console.error(err);
         });
     }
   }, [usernameToken]);
