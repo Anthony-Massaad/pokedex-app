@@ -78,7 +78,6 @@ const ToastProvider = ({ children }) => {
 };
 
 const useToastProviderContext = () => {
-  console.log(ToastContext);
   return useContext(ToastContext);
 };
 

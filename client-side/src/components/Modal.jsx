@@ -5,6 +5,7 @@ import favicon from "../assests/favicon.ico";
 import { includes, isEmpty, omit } from "lodash";
 import axios from "axios";
 import { logger } from "../utils/logger";
+import { useLocalStorageContext } from "../utils/storage/LocalStorage";
 
 const Modal = ({
   title,
@@ -14,11 +15,11 @@ const Modal = ({
   setDisplaySignInModal,
   setDisplaySignUpModal,
   signIn,
-  setToken,
 }) => {
   const [usernameInput, setUsernameInput] = useState("");
   const [passwordInput, setPasswordInput] = useState("");
   const [activeErrors, setActiveErrors] = useState({});
+  const { setToken } = useLocalStorageContext();
 
   useEffect(() => {
     if (!display) {
@@ -81,7 +82,7 @@ const Modal = ({
             if (res_data.response) {
               setDisplaySignInModal(false);
               signIn(res_data.response, res_data.username);
-              setToken(res_data.access_token);
+              setToken("username", res_data.access_token);
             } else {
               const errors = {};
               errors[common.modalErrors.keys.signInSubmit] =
@@ -103,7 +104,7 @@ const Modal = ({
             if (res_data.response) {
               setDisplaySignUpModal(false);
               signIn(res_data.response, res_data.username);
-              setToken(res_data.access_token);
+              setToken("username", res_data.access_token);
             } else {
               const errors = {};
               errors[common.modalErrors.keys.signUpSubmit] =

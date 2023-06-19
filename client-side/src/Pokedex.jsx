@@ -9,23 +9,21 @@ import common from "./data/common";
 import Modal from "./components/Modal";
 import axios from "axios";
 import { logger } from "./utils/logger";
-import UseToken from "./utils/UseToken";
 import { useToastProviderContext } from "./utils/toast/Toast";
+import {
+  useLocalStorageContext,
+  useLocalStorageVariableContext,
+} from "./utils/storage/LocalStorage";
 
 const Pokedex = () => {
-  const { token, setToken } = UseToken();
   const setToast = useToastProviderContext();
-  console.log(setToast);
+  const { setToken } = useLocalStorageContext();
+  const { usernameToken } = useLocalStorageVariableContext();
+
   const [isSignedIn, setIsSignedIn] = useState(false);
   const [user, setUser] = useState({ username: "" });
   const [displaySignInModal, setDisplaySignInModal] = useState(false);
   const [displaySignUpModal, setDisplaySignUpModal] = useState(false);
-
-  const options = {
-    headers: {
-      Authorization: "Bearer " + token,
-    },
-  };
 
   const signIn = (isLogIn, username) => {
     setIsSignedIn(isLogIn);
@@ -63,19 +61,23 @@ const Pokedex = () => {
   };
 
   useEffect(() => {
-    if (token) {
+    if (usernameToken) {
       axios
-        .get(`http://127.0.0.1:8080/check`, options)
+        .get(`http://127.0.0.1:8080/check`, {
+          headers: {
+            Authorization: "Bearer " + usernameToken,
+          },
+        })
         .then((res) => {
           const data = res.data;
-          data.access_token && setToken(data.access_token);
+          data.access_token && setToken("username", data.access_token);
           signIn(data.response, data.username);
         })
         .catch((err) => {
           logger.error(err);
         });
     }
-  }, [token]);
+  }, [usernameToken]);
 
   return (
     <>
@@ -94,7 +96,6 @@ const Pokedex = () => {
             setDisplaySignInModal={setDisplaySignInModal}
             setDisplaySignUpModal={setDisplaySignUpModal}
             signIn={signIn}
-            setToken={setToken}
           />
           <Modal
             title={common.header.sign_up}
@@ -104,7 +105,6 @@ const Pokedex = () => {
             setDisplaySignInModal={setDisplaySignInModal}
             setDisplaySignUpModal={setDisplaySignUpModal}
             signIn={signIn}
-            setToken={setToken}
           />
         </Header>
         <ScrollToTop>
