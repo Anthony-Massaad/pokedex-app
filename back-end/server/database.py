@@ -239,9 +239,15 @@ def createAccount(username, password):
 
 def addFavorites(username, poke_name):
     Logger.info("ENTERED FAVORITES: username=", username, " poke_name=", poke_name)
-    fav = Favorites(username=username, poke_name=poke_name)
-    db.session.add(fav)
-    db.session.commit()
+    favorite = Favorites.query.filter_by(username=username, poke_name=poke_name).first()    
+    if not favorite:
+        fav = Favorites(username=username, poke_name=poke_name)
+        db.session.add(fav)
+        db.session.commit()
+    else: 
+        # remove 
+        ...
+    return True
 
 def queries():
     # Delete all rows from the tables
