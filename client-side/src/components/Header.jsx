@@ -10,6 +10,8 @@ const Header = ({
   user,
   children,
 }) => {
+  const [showSignInOptions, setShowSignInOptions] = useState(false);
+
   const Button = ({ isFor, text, click }) => {
     return (
       <div className={`btn ${isFor}`} role="button" onClick={click}>
@@ -25,7 +27,7 @@ const Header = ({
     <>
       <div className="header-container">
         <header className="container">
-          <Link to="/">
+          <Link to="/" onClick={() => setShowSignInOptions(false)}>
             <img
               src="https://assets.pokemon.com/assets/cms2/img/misc/gus/buttons/logo-pokemon-79x45.png"
               alt="Pokemon logo"
@@ -33,11 +35,32 @@ const Header = ({
           </Link>
           {isSignedIn ? (
             <div className="header-user-signed-in">
-              <div className="user-signed-in">
-                <strong>{user.username}</strong>
+              <div
+                className="user-signed-in"
+                onClick={() => setShowSignInOptions(!showSignInOptions)}
+              >
                 <img src={avatar} alt="" />
+                <strong>{user.username}</strong>
+                <span className="trigger-arrow-container display-flex-center">
+                  <i className="rotate-45deg" id="trigger-select-arrow"></i>
+                </span>
               </div>
-              <Link to="/favorites">View Favorites</Link>
+              <ul
+                className="sign-in-advance-options"
+                style={{ display: `${showSignInOptions ? "block" : "none"}` }}
+              >
+                <li>
+                  <Link to="/favorites" onClick={() => setShowSignInOptions(false)}>View Favorites</Link>
+                </li>
+                <li>
+                  <Link to="/profile" onClick={() => setShowSignInOptions(false)}>Profile</Link>
+                </li>
+                <li>
+                  <div role="button" className="logout-button" onClick={() => setShowSignInOptions(false)}>
+                    Logout
+                  </div>
+                </li>
+              </ul>
             </div>
           ) : (
             <>

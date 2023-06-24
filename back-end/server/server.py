@@ -4,7 +4,7 @@ from server.database import queries, getAllPokemons, getPokemonByPokeName, \
 from flask_cors import CORS
 from datetime import datetime, timedelta, timezone
 from flask_jwt_extended import create_access_token,get_jwt,get_jwt_identity, \
-                               jwt_required, JWTManager
+                               jwt_required, JWTManager, unset_jwt_cookies
 from utils.logger import Logger
 import json
 
@@ -110,6 +110,12 @@ def signUp():
     return {
         "response": False
     }
+
+@app.route("/logout", methods=["POST"])
+def logout():
+    response = jsonify({"msg": "logout successful"})
+    unset_jwt_cookies(response)
+    return response
 
 @app.route("/addFavorite", methods=['POST'])
 def addFavourite():
