@@ -1266,6 +1266,10 @@ BEGINNING OF SINGLE POKEMON HTML CSS
   z-index: 100;
 }
 
+.header-user-signed-in:hover .sign-in-advance-options {
+  display: block;
+}
+
 .sign-in-advance-options li a,
 .sign-in-advance-options li div {
   display: block;

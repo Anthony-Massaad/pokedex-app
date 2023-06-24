@@ -1,16 +1,39 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, RedirectFunction, useLocation } from "react-router-dom";
 import common from "../data/common";
 import avatar from "../assests/avatar.png";
+import axios from "axios";
+import { useLocalStorageContext } from "../utils/storage/LocalStorage";
+import { useToastProviderContext } from "../utils/toast/Toast";
 
 const Header = ({
   isSignedIn,
   setDisplaySignInModal,
   setDisplaySignUpModal,
   user,
+  signIn,
   children,
 }) => {
-  const [showSignInOptions, setShowSignInOptions] = useState(false);
+  const { removeToken } = useLocalStorageContext();
+  const setToast = useToastProviderContext();
+
+  const logMeOut = () => {
+    axios
+      .post("http://127.0.0.1:8080/logout")
+      .then((response) => {
+        console.log(response);
+        removeToken("username");
+        signIn(false, "");
+      })
+      .catch((error) => {
+        console.error(error);
+        setToast({
+          severity: "error",
+          title: "Log out issue",
+          description: "Error in logging out",
+        });
+      });
+  };
 
   const Button = ({ isFor, text, click }) => {
     return (
@@ -27,7 +50,7 @@ const Header = ({
     <>
       <div className="header-container">
         <header className="container">
-          <Link to="/" onClick={() => setShowSignInOptions(false)}>
+          <Link to="/">
             <img
               src="https://assets.pokemon.com/assets/cms2/img/misc/gus/buttons/logo-pokemon-79x45.png"
               alt="Pokemon logo"
@@ -35,28 +58,28 @@ const Header = ({
           </Link>
           {isSignedIn ? (
             <div className="header-user-signed-in">
-              <div
-                className="user-signed-in"
-                onClick={() => setShowSignInOptions(!showSignInOptions)}
-              >
+              <div className="user-signed-in">
                 <img src={avatar} alt="" />
                 <strong>{user.username}</strong>
                 <span className="trigger-arrow-container display-flex-center">
                   <i className="rotate-45deg" id="trigger-select-arrow"></i>
                 </span>
               </div>
-              <ul
-                className="sign-in-advance-options"
-                style={{ display: `${showSignInOptions ? "block" : "none"}` }}
-              >
+              <ul className="sign-in-advance-options">
                 <li>
-                  <Link to="/favorites" onClick={() => setShowSignInOptions(false)}>View Favorites</Link>
+                  <Link to="/favorites">View Favorites</Link>
                 </li>
                 <li>
-                  <Link to="/profile" onClick={() => setShowSignInOptions(false)}>Profile</Link>
+                  <Link to="/profile">Profile</Link>
                 </li>
                 <li>
-                  <div role="button" className="logout-button" onClick={() => setShowSignInOptions(false)}>
+                  <div
+                    role="button"
+                    className="logout-button"
+                    onClick={() => {
+                      logMeOut();
+                    }}
+                  >
                     Logout
                   </div>
                 </li>

@@ -1,5 +1,10 @@
-import React, { useContext, useEffect, useState } from "react";
-import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import {
+  BrowserRouter as Router,
+  Route,
+  Routes,
+  Navigate,
+} from "react-router-dom";
 import ScrollToTop from "./utils/ScrollToTop";
 import Home from "./pages/Home";
 import Header from "./components/Header";
@@ -104,6 +109,7 @@ const Pokedex = () => {
           setDisplaySignInModal={setDisplaySignInModal}
           setDisplaySignUpModal={setDisplaySignUpModal}
           user={user}
+          signIn={signIn}
         >
           <Modal
             title={common.header.sign_in}
@@ -142,12 +148,16 @@ const Pokedex = () => {
               path="/favorites"
               exact
               element={
-                <Home
-                  onFavoriteClick={onFavoriteClick}
-                  user={user}
-                  isSignedIn={isSignedIn}
-                  showOnlyFavorites={true}
-                />
+                isSignedIn ? (
+                  <Home
+                    onFavoriteClick={onFavoriteClick}
+                    user={user}
+                    isSignedIn={isSignedIn}
+                    showOnlyFavorites={true}
+                  />
+                ) : (
+                  <Navigate to="/" />
+                )
               }
             />
             <Route
