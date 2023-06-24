@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import common from "../data/common";
 import { Link } from "react-router-dom";
-import { omit, map, isEmpty, chain } from "lodash";
+import { omit, map, isEmpty, chain, mapValues } from "lodash";
 import axios from "axios";
 import { useToastProviderContext } from "../utils/toast/Toast";
 
@@ -141,6 +141,7 @@ const Filter = ({
 
 const Main = ({
   data,
+  setData,
   setFilterDropdownActive,
   filterDrowndownActive,
   activefilterDropdownValue,
@@ -148,7 +149,7 @@ const Main = ({
   changeOrderFilter,
   onFavoriteClick,
 }) => {
-  const PokemonCard = ({ name, id, types }) => {
+  const PokemonCard = ({ name, id, types, isFavorite, unique_id }) => {
     const Type = ({ type }) => {
       return <span className={`${type.toLowerCase()}-type-color`}>{type}</span>;
     };
@@ -156,10 +157,19 @@ const Main = ({
     return (
       <li>
         <div
-          className="favorite-star"
+          className={`favorite-star ${isFavorite ? "fav-added" : ""}`}
           id={id}
           role="button"
-          onClick={() => onFavoriteClick(id, name)}
+          onClick={() => {
+            if (onFavoriteClick(id, name)) {
+              mapValues(data, (poke) => {
+                if (poke.id === unique_id) {
+                  poke.isFavorite = !isFavorite;
+                  return;
+                }
+              });
+            }
+          }}
         ></div>
         <Link to={`/pokemons/${name}`}>
           <img
@@ -231,6 +241,8 @@ const Main = ({
                 name={pokemon.poke_name}
                 id={pokemon.poke_id}
                 types={pokemon.types}
+                isFavorite={pokemon.isFavorite}
+                unique_id={pokemon.id}
               />
             ))
           : "...Loading"}
@@ -239,7 +251,7 @@ const Main = ({
   );
 };
 
-const Home = ({ onFavoriteClick }) => {
+const Home = ({ onFavoriteClick, user, isSignedIn, showOnlyFavorites }) => {
   const [data, setData] = useState(null);
   const [appliedFilters, setAppliedFilters] = useState({});
   const [searchValue, setSearchValue] = useState("");
@@ -278,10 +290,17 @@ const Home = ({ onFavoriteClick }) => {
   }, [activefilterDropdownValue]);
 
   useEffect(() => {
+    const grabFavs = isSignedIn ? `?username=${user.username}` : "";
+
+    const getLink = showOnlyFavorites
+      ? `http://127.0.0.1:8080/getFavoritePokemons${grabFavs}`
+      : `http://127.0.0.1:8080/getPokemons${grabFavs}`;
+
     axios
-      .get(`http://127.0.0.1:8080/getPokemons`)
+      .get(getLink)
       .then((res) => {
         const res_data = res.data;
+        console.log(res_data);
         setData(res_data.pokemons);
       })
       .catch((error) => {
@@ -292,7 +311,7 @@ const Home = ({ onFavoriteClick }) => {
           description: "Can't Load Pokemons",
         });
       });
-  }, []);
+  }, [isSignedIn, showOnlyFavorites]);
 
   const onSearch = () => {
     let name = "";
@@ -308,9 +327,14 @@ const Home = ({ onFavoriteClick }) => {
       name = `&pokeName=${searchValue}`;
     }
 
+    const grabFavs = isSignedIn ? `&username=${user.username}` : "";
+    const isFavoriteOnly = showOnlyFavorites
+      ? `&isFavoriteOnly=${showOnlyFavorites}`
+      : "";
+
     axios
       .get(
-        `http://127.0.0.1:8080/searchPokemons?order=${activefilterDropdownValue}${name}${filters}`
+        `http://127.0.0.1:8080/searchPokemons?order=${activefilterDropdownValue}${name}${filters}${grabFavs}${isFavoriteOnly}`
       )
       .then((res) => {
         const res_data = res.data;
@@ -335,6 +359,7 @@ const Home = ({ onFavoriteClick }) => {
       />
       <Main
         data={data}
+        setData={setData}
         filterDrowndownActive={filterDrowndownActive}
         setFilterDropdownActive={setFilterDropdownActive}
         activefilterDropdownValue={activefilterDropdownValue}

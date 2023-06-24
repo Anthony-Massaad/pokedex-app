@@ -48,17 +48,38 @@ class Favorites(db.Model):
     user_rel = db.relationship("User", foreign_keys=[username])
     pokemon_rel = db.relationship("Pokemon", foreign_keys=[poke_name])
 
-def getAllPokemons():
+def getFavoritesByUsername(username):
+    # user is signed in, we want to collect the favorites! 
+    favorites = set()
+    if not username:
+        return favorites
+    favorites_query = db.session.query(Favorites.poke_name).filter(Favorites.username == username)
+    favorites = {fav[0] for fav in favorites_query.all()}
+    Logger.info("Favorites for ", username, " ", favorites, db.session.query(Favorites).count(), favorites_query.all())
+    return favorites
+
+def getFavoriteByUsernameAndPokeName(username, poke_name):
+    if not username:
+        return None
+    favorite = Favorites.query.filter_by(username=username, poke_name=poke_name).first()  
+    return favorite 
+
+def getAllPokemons(username):
+    Logger.info("Getting all pokemons, username is ", username)
     query = db.session.query(Pokemon.poke_name, Pokemon.poke_id, Pokemon.id, func.group_concat(Type.attr_name)).join(Type, Pokemon.poke_name == Type.poke_name).order_by(Pokemon.id.asc()).group_by(Pokemon.poke_name)
     results = query.all()  # Execute the query and fetch all the results
     poke_dict = defaultdict(list)
     poke_dict["pokemons"] = []
+    
+    favorites = getFavoritesByUsername(username)
+        
     for record in results:
         data = {
             "poke_name": record[0],
             "poke_id": record[1],
             "id": record[2],
             "types": record[3].split(","),
+            "isFavorite": record[0] in favorites  # Check if the poke_name is in favorites
         }
         poke_dict["pokemons"].append(data)
     json_data = dict(poke_dict)
@@ -66,7 +87,41 @@ def getAllPokemons():
 
     return json_data
 
-def getPokemonByPokeName(name):
+def getAllFavoritePokemons(username):
+    query = db.session.query(
+        Pokemon.poke_name,
+        Pokemon.poke_id,
+        Pokemon.id,
+        func.group_concat(Type.attr_name)
+    ).join(Type, Pokemon.poke_name == Type.poke_name).join(
+        Favorites, Pokemon.poke_name == Favorites.poke_name
+    ).filter(
+        Favorites.username == username
+    ).order_by(
+        Pokemon.id.asc()
+    ).group_by(
+        Pokemon.poke_name
+    )    
+    
+    results = query.all()
+    poke_dict = defaultdict(list)
+    poke_dict["pokemons"] = []
+    
+    for record in results:
+        data = {
+            "poke_name": record[0],
+            "poke_id": record[1],
+            "id": record[2],
+            "types": record[3].split(","),
+            "isFavorite": True 
+        }
+        poke_dict["pokemons"].append(data)
+        
+    json_data = dict(poke_dict)
+    Logger.info("Dictionary for all favorite pokemons is: \n", json_data)
+    return json_data
+
+def getPokemonByPokeName(name, username):
 
     def getEvolutionDetail(evo_name):
         evo_query = db.session.query(
@@ -137,6 +192,9 @@ def getPokemonByPokeName(name):
     if len(results) != 1:
         Logger.error("Getting pokemon by name resulted in no results")
     
+    favorites = getFavoriteByUsernameAndPokeName(username, name)
+    Logger.info("username ", username, "Favorites of ", name, " is ", favorites)
+    
     result = results[0]     
     poke_dict = defaultdict(list)
     id = result[2]
@@ -148,6 +206,7 @@ def getPokemonByPokeName(name):
         "description": result[3],
         "types": result[4].split(","),
         "weaknesses": result[5].split(","),
+        "isFavorite": favorites != None
     }
     
     # evolution of pokemon
@@ -168,7 +227,7 @@ def getPokemonByPokeName(name):
     print("-----------------------------------")
     return json_data
 
-def pokemonSearch(name, filter, order):
+def pokemonSearch(name, filter, order, username, isFavoriteOnly):
     Logger.info("Entering pokemon search")
     print("-----------------------------------------")
     order_options = {
@@ -179,6 +238,9 @@ def pokemonSearch(name, filter, order):
     };
     
     query = db.session.query(Pokemon.poke_name, Pokemon.poke_id, Pokemon.id)
+    
+    if isFavoriteOnly:
+        query = query.join(Favorites, Pokemon.poke_name == Favorites.poke_name).filter(Favorites.username == username)
     
     if name: 
         Logger.info("Pokemon Search has Name: ", name)
@@ -204,9 +266,12 @@ def pokemonSearch(name, filter, order):
         query = query.order_by(order_option)
     else:
         Logger.error("Pokemon Search order unknown: ", order)
+    
+    
+    
+    favorites = getFavoritesByUsername(username)
         
     results = query.all()
-    print(len(results))
     poke_dict = defaultdict(list)
     poke_dict["pokemons"] = []
     for record in results:
@@ -215,7 +280,9 @@ def pokemonSearch(name, filter, order):
             "poke_name": record[0],
             "poke_id": record[1],
             "id": record[2],
-            "types": types[0][1].split(",")
+            "types": types[0][1].split(","),
+            "isFavorite": record[0] in favorites
+
         }
         poke_dict["pokemons"].append(data)
     json_data = dict(poke_dict)    
@@ -244,10 +311,11 @@ def addFavorites(username, poke_name):
         fav = Favorites(username=username, poke_name=poke_name)
         db.session.add(fav)
         db.session.commit()
+        return "add"
     else: 
-        # remove 
-        ...
-    return True
+        Favorites.query.filter_by(username=username, poke_name=poke_name).delete()
+        db.session.commit()
+        return "remove"
 
 def queries():
     # Delete all rows from the tables

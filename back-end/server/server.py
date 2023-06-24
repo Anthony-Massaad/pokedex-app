@@ -1,6 +1,6 @@
 from flask import request, Flask, jsonify
 from server.database import queries, getAllPokemons, getPokemonByPokeName, \
-    pokemonSearch, signIn, db, createAccount, addFavorites
+    pokemonSearch, signIn, db, createAccount, addFavorites, getAllFavoritePokemons
 from flask_cors import CORS
 from datetime import datetime, timedelta, timezone
 from flask_jwt_extended import create_access_token,get_jwt,get_jwt_identity, \
@@ -56,18 +56,27 @@ def check():
 @app.route("/getPokemonByName", methods=['GET'])
 def getPokemonByName():
     pokemon_name = request.args.get('pokemonName')
-    return getPokemonByPokeName(pokemon_name)
+    username = request.args.get('username')
+    return getPokemonByPokeName(pokemon_name, username)
 
 @app.route("/getPokemons", methods=['GET'])
 def getPokemons():
-    return getAllPokemons()
+    username = request.args.get("username")
+    return getAllPokemons(username)
+
+@app.route("/getFavoritePokemons", methods=['GET'])
+def getFavoritePokemons():
+    username = request.args.get('username')
+    return getAllFavoritePokemons(username)
 
 @app.route("/searchPokemons", methods=["GET"])
 def searchPokemons():
     filters = request.args.get("filters")
     name = request.args.get("pokeName")
     order = request.args.get("order")
-    return pokemonSearch(name, filters, order)
+    username = request.args.get("username")
+    isFavoriteOnly = request.args.get('isFavoriteOnly')
+    return pokemonSearch(name, filters, order, username, isFavoriteOnly)
 
 @app.route("/login", methods=["GET"])
 def login():
@@ -106,9 +115,9 @@ def signUp():
 def addFavourite():
     poke_name = request.args.get("poke_name")
     username = request.args.get("username")
-    addFavorites(username, poke_name)
+    commit = addFavorites(username, poke_name)
     return jsonify({
-        "success": True
+        "action": commit
     })
     
 

@@ -29,7 +29,7 @@ const Evolution = ({ pokeName, pokeId, types }) => {
   );
 };
 
-const Pokemon = ({ onFavoriteClick }) => {
+const Pokemon = ({ onFavoriteClick, isSignedIn, user }) => {
   const [data, setData] = useState(null);
   const [pokemonData, setPokemonData] = useState(null);
   const [evolutionData, setEvolutionData] = useState(null);
@@ -38,10 +38,15 @@ const Pokemon = ({ onFavoriteClick }) => {
   const { pokemonName } = useParams();
 
   useEffect(() => {
+    const grabFavs = isSignedIn ? `&username=${user.username}` : "";
+    console.log(grabFavs);
     axios
-      .get(`http://127.0.0.1:8080/getPokemonByName?pokemonName=${pokemonName}`)
+      .get(
+        `http://127.0.0.1:8080/getPokemonByName?pokemonName=${pokemonName}${grabFavs}`
+      )
       .then((res) => {
         const fetchedData = res.data;
+        console.log(fetchedData);
         setData(fetchedData);
         setPokemonData(fetchedData.pokemon);
         setEvolutionData(fetchedData.evolution);
@@ -51,7 +56,7 @@ const Pokemon = ({ onFavoriteClick }) => {
       .catch((error) => {
         console.error(error);
       });
-  }, [pokemonName]);
+  }, [pokemonName, isSignedIn]);
 
   return (
     <>
@@ -84,12 +89,16 @@ const Pokemon = ({ onFavoriteClick }) => {
           <div className="container single-pokemon-title">
             <div className="display-flex-center">
               <div
-                className="favorite-star"
+                className={`favorite-star ${
+                  pokemonData.isFavorite ? "fav-added" : ""
+                }`}
                 id={pokemonData.id}
                 role="button"
-                onClick={() =>
-                  onFavoriteClick(pokemonData.id, pokemonData.poke_name)
-                }
+                onClick={() => {
+                  if (onFavoriteClick(pokemonData.id, pokemonData.poke_name)) {
+                    pokemonData.isFavorite = !pokemonData.isFavorite;
+                  }
+                }}
               ></div>
               {pokemonData.poke_name} <span>#{pokemonData.poke_id}</span>
             </div>

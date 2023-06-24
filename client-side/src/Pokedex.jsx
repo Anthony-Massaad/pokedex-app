@@ -36,15 +36,29 @@ const Pokedex = () => {
       // do something
       axios
         .post(
-          `http://127.0.0.1:8080/addFavorite?poke_id=${id}&poke_name=${poke_name}&username=${user.username}}`
+          `http://127.0.0.1:8080/addFavorite?poke_id=${id}&poke_name=${poke_name}&username=${user.username}`
         )
         .then((res) => {
-          console.log(res);
-          setToast({
-            severity: "success",
-            title: "Favorite added",
-            description: `Pokemon ${poke_name} added to favorites`,
-          });
+          const _data = res.data;
+          if (_data.action == "add") {
+            setToast({
+              severity: "success",
+              title: "Favorite added",
+              description: `Pokemon ${poke_name} added to favorites`,
+            });
+          } else if (_data.action == "remove") {
+            setToast({
+              severity: "success",
+              title: "Favorite removed",
+              description: `Pokemon ${poke_name} removed from favorites`,
+            });
+          } else {
+            setToast({
+              severity: "error",
+              title: "Favorite command launched",
+              description: `unknown action occurred!`,
+            });
+          }
         })
         .catch((err) => {
           console.error(err);
@@ -53,10 +67,13 @@ const Pokedex = () => {
             title: "Favorite Issue",
             description: `Could not favorite pokemon ${poke_name}`,
           });
+          return false;
         });
+      return true;
     } else {
       setDisplaySignInModal(true);
     }
+    return false;
   };
 
   useEffect(() => {
@@ -70,6 +87,7 @@ const Pokedex = () => {
         .then((res) => {
           const data = res.data;
           data.access_token && setToken("username", data.access_token);
+          console.log(data);
           signIn(data.response, data.username);
         })
         .catch((err) => {
@@ -111,12 +129,37 @@ const Pokedex = () => {
             <Route
               path="/"
               exact
-              element={<Home onFavoriteClick={onFavoriteClick} />}
+              element={
+                <Home
+                  onFavoriteClick={onFavoriteClick}
+                  user={user}
+                  isSignedIn={isSignedIn}
+                  showOnlyFavorites={false}
+                />
+              }
+            />
+            <Route
+              path="/favorites"
+              exact
+              element={
+                <Home
+                  onFavoriteClick={onFavoriteClick}
+                  user={user}
+                  isSignedIn={isSignedIn}
+                  showOnlyFavorites={true}
+                />
+              }
             />
             <Route
               path="/Pokemons/:pokemonName"
               exact
-              element={<Pokemon onFavoriteClick={onFavoriteClick} />}
+              element={
+                <Pokemon
+                  onFavoriteClick={onFavoriteClick}
+                  user={user}
+                  isSignedIn={isSignedIn}
+                />
+              }
             />
           </Routes>
         </ScrollToTop>
