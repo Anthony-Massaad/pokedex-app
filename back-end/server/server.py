@@ -1,6 +1,6 @@
 from flask import request, Flask, jsonify
 from server.database import queries, getAllPokemons, getPokemonByPokeName, \
-    pokemonSearch, signIn, db, createAccount, addFavorites, getAllFavoritePokemons
+    pokemonSearch, signIn, db, createAccount, addFavorites, getAllFavoritePokemons, getProfileData
 from flask_cors import CORS
 from datetime import datetime, timedelta, timezone
 from flask_jwt_extended import create_access_token,get_jwt,get_jwt_identity, \
@@ -126,6 +126,17 @@ def addFavourite():
         "action": commit
     })
     
+
+@app.route('/profile')
+@jwt_required() #new line
+def myProfile():
+    response_body = {
+        "name": "Nagato",
+        "about" :"Hello! I'm a full stack developer that loves python and javascript"
+    }
+    username = get_jwt_identity()
+    data = getProfileData(username)
+    return jsonify(data)
 
 def create_app():
     with app.app_context():

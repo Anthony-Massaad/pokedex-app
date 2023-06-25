@@ -317,6 +317,14 @@ def addFavorites(username, poke_name):
         db.session.commit()
         return "remove"
 
+def getProfileData(username):
+    favs_count = Favorites.query.filter_by(username=username).count()
+    return  {
+        "username": username,
+        "favoritesCount": favs_count
+    }
+    
+
 def queries():
     # Delete all rows from the tables
     db.session.query(Weakness).delete()

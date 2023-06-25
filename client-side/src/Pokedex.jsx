@@ -12,6 +12,7 @@ import Footer from "./components/Footer";
 import Pokemon from "./pages/Pokemon";
 import common from "./data/common";
 import Modal from "./components/Modal";
+import Profile from "./pages/Profile";
 import axios from "axios";
 import { useToastProviderContext } from "./utils/toast/Toast";
 import {
@@ -92,7 +93,6 @@ const Pokedex = () => {
         .then((res) => {
           const data = res.data;
           data.access_token && setToken("username", data.access_token);
-          console.log(data);
           signIn(data.response, data.username);
         })
         .catch((err) => {
@@ -144,6 +144,7 @@ const Pokedex = () => {
                 />
               }
             />
+            <Route path="/profile" exact element={isSignedIn ? <Profile /> : <Navigate to="/" />} />
             <Route
               path="/favorites"
               exact

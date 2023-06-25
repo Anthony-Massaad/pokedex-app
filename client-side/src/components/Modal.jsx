@@ -90,7 +90,7 @@ const Modal = ({
             }
           })
           .catch((error) => {
-            console.log(error);
+            console.error(error);
           });
       } else {
         // post

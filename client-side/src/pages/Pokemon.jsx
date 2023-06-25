@@ -39,14 +39,12 @@ const Pokemon = ({ onFavoriteClick, isSignedIn, user }) => {
 
   useEffect(() => {
     const grabFavs = isSignedIn ? `&username=${user.username}` : "";
-    console.log(grabFavs);
     axios
       .get(
         `http://127.0.0.1:8080/getPokemonByName?pokemonName=${pokemonName}${grabFavs}`
       )
       .then((res) => {
         const fetchedData = res.data;
-        console.log(fetchedData);
         setData(fetchedData);
         setPokemonData(fetchedData.pokemon);
         setEvolutionData(fetchedData.evolution);

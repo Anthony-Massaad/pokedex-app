@@ -300,7 +300,6 @@ const Home = ({ onFavoriteClick, user, isSignedIn, showOnlyFavorites }) => {
       .get(getLink)
       .then((res) => {
         const res_data = res.data;
-        console.log(res_data);
         setData(res_data.pokemons);
       })
       .catch((error) => {
