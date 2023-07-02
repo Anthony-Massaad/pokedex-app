@@ -55,7 +55,6 @@ def getFavoritesByUsername(username):
         return favorites
     favorites_query = db.session.query(Favorites.poke_name).filter(Favorites.username == username)
     favorites = {fav[0] for fav in favorites_query.all()}
-    Logger.info("Favorites for ", username, " ", favorites, db.session.query(Favorites).count(), favorites_query.all())
     return favorites
 
 def getFavoriteByUsernameAndPokeName(username, poke_name):
@@ -83,7 +82,7 @@ def getAllPokemons(username):
         }
         poke_dict["pokemons"].append(data)
     json_data = dict(poke_dict)
-    Logger.info("Dictionary for all pokemons is: \n", json_data)
+    Logger.debug("Dictionary for all pokemons is: \n", json_data)
 
     return json_data
 
@@ -118,7 +117,7 @@ def getAllFavoritePokemons(username):
         poke_dict["pokemons"].append(data)
         
     json_data = dict(poke_dict)
-    Logger.info("Dictionary for all favorite pokemons is: \n", json_data)
+    Logger.debug("Dictionary for all favorite pokemons is: \n", json_data)
     return json_data
 
 def getPokemonByPokeName(name, username):
@@ -133,12 +132,14 @@ def getPokemonByPokeName(name, username):
         .join(Type, Pokemon.poke_name == Type.poke_name)
         
         evo_results = evo_query.all()  # Execute the query and fetch all the result
-        Logger.info("Getting evolution information of: ", evo_name, " created ", evo_results)
+        Logger.debug("Getting evolution information of: ", evo_name, " created ", evo_results)
         
         if len(evo_results) == 0:
             return
         
         result = evo_results[0]
+        if not result:
+            return {}
         return {
             "poke_name": result[0],
             "poke_id": result[1],
@@ -187,13 +188,13 @@ def getPokemonByPokeName(name, username):
     .join(Evolution, Pokemon.poke_name == Evolution.poke_name)
     results = query.all()  # Execute the query and fetch all the result
     
-    Logger.info("Selected Pokemon Results: :\n", results)
+    Logger.debug("Selected Pokemon Results: :\n", results)
     
     if len(results) != 1:
         Logger.error("Getting pokemon by name resulted in no results")
     
     favorites = getFavoriteByUsernameAndPokeName(username, name)
-    Logger.info("username ", username, "Favorites of ", name, " is ", favorites)
+    Logger.debug("username ", username, "Favorites of ", name, " is ", favorites)
     
     result = results[0]     
     poke_dict = defaultdict(list)
@@ -223,7 +224,7 @@ def getPokemonByPokeName(name, username):
     poke_dict["previous_pokemon"] = getPokemonById(id - 1, max_id)
     
     json_data = dict(poke_dict)
-    Logger.info("Returning Dictionary: \n", json_data)
+    Logger.debug("Returning Dictionary: \n", json_data)
     print("-----------------------------------")
     return json_data
 
@@ -286,7 +287,7 @@ def pokemonSearch(name, filter, order, username, isFavoriteOnly):
         }
         poke_dict["pokemons"].append(data)
     json_data = dict(poke_dict)    
-    Logger.info("Json Data for pokemon Search: ", json_data)
+    Logger.debug("Json Data for pokemon Search: ", json_data)
     return json_data
 
 def signIn(username, password): 
@@ -325,7 +326,7 @@ def getProfileData(username):
     }
     
 
-def queries():
+def initializeDatabase(data):
     # Delete all rows from the tables
     db.session.query(Weakness).delete()
     db.session.query(Evolution).delete()
@@ -335,78 +336,17 @@ def queries():
     # db.session.query(Favorites).delete()
 
     db.session.commit()
+    
+    for pokemon in data:
+        db.session.add(Pokemon(poke_name=pokemon["name"], poke_id=pokemon["poke_id"], id=pokemon["id"], poke_description=pokemon["description"]))
+        for type in pokemon["types"]:
+            db.session.add(Type(poke_name=pokemon["name"], attr_name=type))
         
-    # TODO Automate this from a json!
+        for weakness in pokemon["weaknesses"]:    
+            db.session.add(Weakness(poke_name=pokemon["name"], attr_name=weakness))
 
-    db.session.add(Pokemon(poke_name="Bulbasaur", poke_id="001", id=1, poke_description="There is a plant seed on its back right from the day this Pokémon is born. The seed slowly grows larger."))
-    db.session.add(Pokemon(poke_name="Ivysaur", poke_id="002", id=2, poke_description="When the bulb on its back grows large, it appears to lose the ability to stand on its hind legs."))
-    db.session.add(Pokemon(poke_name="Venusaur", poke_id="003", id=3, poke_description="Its plant blooms when it is absorbing solar energy. It stays on the move to seek sunlight."))
-    db.session.add(Pokemon(poke_name="Charmander", poke_id="004", id=4, poke_description="It has a preference for hot things. When it rains, steam is said to spout from the tip of its tail."))
-    db.session.add(Pokemon(poke_name="Charmeleon", poke_id="005", id=5, poke_description="It has a barbaric nature. In battle, it whips its fiery tail around and slashes away with sharp claws."))
-    db.session.add(Pokemon(poke_name="Charizard", poke_id="006", id=6, poke_description="It spits fire that is hot enough to melt boulders. It may cause forest fires by blowing flames."))
-    
-    db.session.add(Type(poke_name="Bulbasaur", attr_name="Grass"))
-    db.session.add(Type(poke_name="Bulbasaur", attr_name="Poison"))
-    db.session.add(Type(poke_name="Ivysaur", attr_name="Grass"))
-    db.session.add(Type(poke_name="Ivysaur", attr_name="Poison"))
-    db.session.add(Type(poke_name="Venusaur", attr_name="Grass"))
-    db.session.add(Type(poke_name="Venusaur", attr_name="Poison"))
-    
-    db.session.add(Type(poke_name="Charmander", attr_name="Fire"))
-    db.session.add(Type(poke_name="Charmeleon", attr_name="Fire"))
-    db.session.add(Type(poke_name="Charizard", attr_name="Fire"))
-    db.session.add(Type(poke_name="Charizard", attr_name="Flying"))
-
-    db.session.add(Weakness(poke_name="Bulbasaur", attr_name="Fire"))
-    db.session.add(Weakness(poke_name="Bulbasaur", attr_name="Psychic"))
-    db.session.add(Weakness(poke_name="Bulbasaur", attr_name="Flying"))
-    db.session.add(Weakness(poke_name="Bulbasaur", attr_name="Ice"))
-    
-    db.session.add(Weakness(poke_name="Ivysaur", attr_name="Fire"))
-    db.session.add(Weakness(poke_name="Ivysaur", attr_name="Psychic"))
-    db.session.add(Weakness(poke_name="Ivysaur", attr_name="Flying"))
-    db.session.add(Weakness(poke_name="Ivysaur", attr_name="Ice"))
-    
-    db.session.add(Weakness(poke_name="Venusaur", attr_name="Fire"))
-    db.session.add(Weakness(poke_name="Venusaur", attr_name="Psychic"))
-    db.session.add(Weakness(poke_name="Venusaur", attr_name="Flying"))
-    db.session.add(Weakness(poke_name="Venusaur", attr_name="Ice"))
-    
-    db.session.add(Weakness(poke_name="Charmander", attr_name="Water"))
-    db.session.add(Weakness(poke_name="Charmander", attr_name="Ground"))
-    db.session.add(Weakness(poke_name="Charmander", attr_name="Rock"))
-    
-    db.session.add(Weakness(poke_name="Charmeleon", attr_name="Water"))
-    db.session.add(Weakness(poke_name="Charmeleon", attr_name="Ground"))
-    db.session.add(Weakness(poke_name="Charmeleon", attr_name="Rock"))
-    
-    db.session.add(Weakness(poke_name="Charizard", attr_name="Water"))
-    db.session.add(Weakness(poke_name="Charizard", attr_name="Ground"))
-    db.session.add(Weakness(poke_name="Charizard", attr_name="Rock"))
-    
-    db.session.add(Evolution(poke_name="Bulbasaur", poke_name_evolution="Bulbasaur"))
-    db.session.add(Evolution(poke_name="Bulbasaur", poke_name_evolution="Ivysaur"))
-    db.session.add(Evolution(poke_name="Bulbasaur", poke_name_evolution="Venusaur"))
-    
-    db.session.add(Evolution(poke_name="Ivysaur", poke_name_evolution="Bulbasaur"))
-    db.session.add(Evolution(poke_name="Ivysaur", poke_name_evolution="Ivysaur"))
-    db.session.add(Evolution(poke_name="Ivysaur", poke_name_evolution="Venusaur"))
-    
-    db.session.add(Evolution(poke_name="Venusaur", poke_name_evolution="Bulbasaur"))
-    db.session.add(Evolution(poke_name="Venusaur", poke_name_evolution="Ivysaur"))
-    db.session.add(Evolution(poke_name="Venusaur", poke_name_evolution="Venusaur"))
-    
-    db.session.add(Evolution(poke_name="Charmander", poke_name_evolution="Charmander"))
-    db.session.add(Evolution(poke_name="Charmander", poke_name_evolution="Charmeleon"))
-    db.session.add(Evolution(poke_name="Charmander", poke_name_evolution="Charizard"))
-    
-    db.session.add(Evolution(poke_name="Charmeleon", poke_name_evolution="Charmander"))
-    db.session.add(Evolution(poke_name="Charmeleon", poke_name_evolution="Charmeleon"))
-    db.session.add(Evolution(poke_name="Charmeleon", poke_name_evolution="Charizard"))
-    
-    db.session.add(Evolution(poke_name="Charizard", poke_name_evolution="Charmander"))
-    db.session.add(Evolution(poke_name="Charizard", poke_name_evolution="Charmeleon"))
-    db.session.add(Evolution(poke_name="Charizard", poke_name_evolution="Charizard"))
+        for evolution in pokemon["evolution"]:
+            db.session.add(Evolution(poke_name=pokemon["name"], poke_name_evolution=evolution))
     
     db.session.add(User(username="tony1bally", password=generate_password_hash("tony", method='scrypt')))
     

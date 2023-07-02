@@ -1,5 +1,5 @@
 from flask import request, Flask, jsonify
-from server.database import queries, getAllPokemons, getPokemonByPokeName, \
+from server.database import initializeDatabase, getAllPokemons, getPokemonByPokeName, \
     pokemonSearch, signIn, db, createAccount, addFavorites, getAllFavoritePokemons, getProfileData
 from flask_cors import CORS
 from datetime import datetime, timedelta, timezone
@@ -138,13 +138,13 @@ def myProfile():
     data = getProfileData(username)
     return jsonify(data)
 
-def create_app():
+def create_app(data):
     with app.app_context():
         db.create_all()
-        queries()
+        initializeDatabase(data)
 
-def run_server():
-    create_app()
+def run_server(data):
+    create_app(data)
     host = '0.0.0.0'
     port = 8080
     app.run(host, port, debug=True, threaded=False)
