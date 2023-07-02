@@ -1,7 +1,7 @@
 import React, { useEffect, useState, createContext, useContext } from "react";
 
-const LocalStorageProviderContext = createContext();
-const LocalStorageVariableProviderContext = createContext();
+const LocalStorageProviderContext = createContext(null);
+const LocalStorageVariableProviderContext = createContext(null);
 
 const LocalStorageProvider = ({ children }) => {
   const [usernameToken, setUsernameToken] = useState(null);

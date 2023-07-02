@@ -1,255 +1,10 @@
 import React, { useEffect, useState } from "react";
 import common from "../data/common";
-import { Link } from "react-router-dom";
-import { omit, map, isEmpty, chain, mapValues } from "lodash";
+import { omit, isEmpty, chain } from "lodash";
 import axios from "axios";
 import { useToastProviderContext } from "../utils/toast/Toast";
-
-const Filter = ({
-  appliedFilters,
-  applyAdvanceFilter,
-  searchValue,
-  setSearchValue,
-  isAdvanceFilter,
-  types,
-  setIsAdvanceFilter,
-  onSearch,
-}) => {
-  const FilterButton = ({ name, id, click }) => {
-    return (
-      <div
-        className="filter-button background-transition"
-        id={id}
-        role="button"
-        onClick={click}
-      >
-        {name}
-      </div>
-    );
-  };
-
-  const TypeFilter = ({ type }) => {
-    return (
-      <li>
-        <div>
-          <span
-            data-value={type}
-            className={`radio-button ${appliedFilters[type] ? `active` : ""}`}
-            onClick={() => {
-              const state = !appliedFilters[type];
-              applyAdvanceFilter(type, state);
-            }}
-          ></span>
-          <span className={`type ${type.toLowerCase()}-type-color`}>
-            {type}
-          </span>
-        </div>
-      </li>
-    );
-  };
-
-  return (
-    <>
-      <div className="search-container">
-        <div className="container search-content">
-          <div>
-            <label htmlFor="search">
-              {common.filter.basic.searchPlaceHolder}
-            </label>
-            <div>
-              <input
-                type="text"
-                id="search-input"
-                autoComplete="off"
-                value={searchValue}
-                onChange={(event) => {
-                  const val = event.target.value || "";
-                  setSearchValue(val);
-                }}
-              />
-              <input
-                type="submit"
-                value={common.labels.search}
-                id="search"
-                className="background-transition"
-                onClick={onSearch}
-              />
-            </div>
-            <p className="additional-info">
-              {" "}
-              {common.filter.basic.additionalInfo}
-            </p>
-          </div>
-          <div>
-            <p className="clarification display-flex-center">
-              {" "}
-              {common.filter.basic.clarification}
-            </p>
-          </div>
-        </div>
-      </div>
-      <div>
-        <div className="blocky filter-backgrounnd-color"></div>
-        <div
-          className="container additional-filter filter-backgrounnd-color"
-          style={isAdvanceFilter ? { maxHeight: "100%" } : { maxHeight: "0" }}
-        >
-          <p className="title">Filter By Type</p>
-          <hr />
-          <p style={{ marginBottom: "0.5rem" }}>
-            Filter by type by selecting one or more type using the circle
-            buttons on the left hand of each type.
-          </p>
-          <p>
-            Click the filter button when ready, or reset to reset the Pokédex.
-          </p>
-          <div className="filter-container">
-            <ul className="type-filter">
-              {types.map((item, idx) => (
-                <TypeFilter key={idx} type={item} />
-              ))}
-            </ul>
-            <div className="filter-button-wrap" style={{ marginTop: "1rem" }}>
-              <FilterButton name="Filter" id="filter" click={onSearch} />
-              <FilterButton name="Reset" id="reset" click={undefined} />
-            </div>
-          </div>
-        </div>
-        <div className="container add-dropdown-container">
-          <div
-            className="filter-backgrounnd-color display-flex-center"
-            onClick={() => setIsAdvanceFilter(!isAdvanceFilter)}
-          >
-            Advance Search{" "}
-            <span className="display-flex-center">
-              <i
-                className="rotate-45deg"
-                id="rotate-arrow-dropdown"
-                style={
-                  isAdvanceFilter
-                    ? { borderWidth: "2px 0px 0px 2px" }
-                    : { borderWidth: "0px 2px 2px 0px" }
-                }
-              ></i>
-            </span>
-          </div>
-        </div>
-      </div>
-    </>
-  );
-};
-
-const Main = ({
-  data,
-  setData,
-  setFilterDropdownActive,
-  filterDrowndownActive,
-  activefilterDropdownValue,
-  filterOptions,
-  changeOrderFilter,
-  onFavoriteClick,
-}) => {
-  const PokemonCard = ({ name, id, types, isFavorite, unique_id }) => {
-    const Type = ({ type }) => {
-      return <span className={`${type.toLowerCase()}-type-color`}>{type}</span>;
-    };
-
-    return (
-      <li>
-        <div
-          className={`favorite-star ${isFavorite ? "fav-added" : ""}`}
-          id={id}
-          role="button"
-          onClick={() => {
-            if (onFavoriteClick(id, name)) {
-              mapValues(data, (poke) => {
-                if (poke.id === unique_id) {
-                  poke.isFavorite = !isFavorite;
-                  return;
-                }
-              });
-            }
-          }}
-        ></div>
-        <Link to={`/pokemons/${name}`}>
-          <img
-            src={`https://assets.pokemon.com/assets/cms2/img/pokedex/detail/${id}.png`}
-            alt=""
-          />
-          <div className="pokemon-info">
-            <p className="pokeID">#{id}</p>
-            <p className="pokeName">{name}</p>
-            <div>
-              {types.map((type, idx) => (
-                <Type key={idx} type={type} />
-              ))}
-            </div>
-          </div>
-        </Link>
-      </li>
-    );
-  };
-
-  const FilterDropdown = () => {
-    return (
-      <div className="select-dropdown-filter filter2-buttons">
-        <div
-          className="select-trigger opacity-transition"
-          id="selection-dropdown"
-          onClick={() => {
-            const state = !filterDrowndownActive;
-            setFilterDropdownActive(state);
-          }}
-        >
-          <span id="selected-filter">{activefilterDropdownValue}</span>{" "}
-          <span className="trigger-arrow-container display-flex-center">
-            <i className="rotate-45deg" id="trigger-select-arrow"></i>
-          </span>
-        </div>
-        <ul
-          className={`custom-options ${
-            filterDrowndownActive ? "custom-active" : ""
-          }`}
-          id="custom-options-selection"
-        >
-          {map(filterOptions, (option, idx) =>
-            option !== activefilterDropdownValue ? (
-              <li
-                key={idx}
-                className="background-transition"
-                onClick={() => changeOrderFilter(option)}
-              >
-                {option}
-              </li>
-            ) : undefined
-          )}
-        </ul>
-      </div>
-    );
-  };
-
-  return (
-    <main className="container main-pokedex-section">
-      <div className="filter2-button-container">
-        <FilterDropdown />
-      </div>
-      <ul className="lst-pokemons">
-        {data
-          ? data.map((pokemon, idx) => (
-              <PokemonCard
-                key={idx}
-                name={pokemon.poke_name}
-                id={pokemon.poke_id}
-                types={pokemon.types}
-                isFavorite={pokemon.isFavorite}
-                unique_id={pokemon.id}
-              />
-            ))
-          : "...Loading"}
-      </ul>
-    </main>
-  );
-};
+import Main from "../components/homeComponents/Main";
+import Filter from "../components/homeComponents/Filter";
 
 const Home = ({ onFavoriteClick, user, isSignedIn, showOnlyFavorites }) => {
   const [data, setData] = useState(null);
@@ -286,10 +41,6 @@ const Home = ({ onFavoriteClick, user, isSignedIn, showOnlyFavorites }) => {
   };
 
   useEffect(() => {
-    onSearch();
-  }, [activefilterDropdownValue]);
-
-  useEffect(() => {
     const grabFavs = isSignedIn ? `?username=${user.username}` : "";
 
     const getLink = showOnlyFavorites
@@ -310,16 +61,13 @@ const Home = ({ onFavoriteClick, user, isSignedIn, showOnlyFavorites }) => {
           description: "Can't Load Pokemons",
         });
       });
-  }, [isSignedIn, showOnlyFavorites]);
+  }, [isSignedIn, setToast, showOnlyFavorites, user.username]);
 
   const onSearch = () => {
     let name = "";
     let filters = "";
     if (!isEmpty(appliedFilters)) {
-      filters = `&filters=${chain(appliedFilters)
-        .keysIn(appliedFilters)
-        .join(",")
-        .value()}`;
+      filters = `&filters=${chain(appliedFilters).keysIn().join(",").value()}`;
     }
 
     if (!isEmpty(searchValue)) {
@@ -358,7 +106,6 @@ const Home = ({ onFavoriteClick, user, isSignedIn, showOnlyFavorites }) => {
       />
       <Main
         data={data}
-        setData={setData}
         filterDrowndownActive={filterDrowndownActive}
         setFilterDropdownActive={setFilterDropdownActive}
         activefilterDropdownValue={activefilterDropdownValue}

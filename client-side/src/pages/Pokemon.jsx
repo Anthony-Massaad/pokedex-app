@@ -54,7 +54,7 @@ const Pokemon = ({ onFavoriteClick, isSignedIn, user }) => {
       .catch((error) => {
         console.error(error);
       });
-  }, [pokemonName, isSignedIn]);
+  }, [pokemonName, isSignedIn, user.username]);
 
   return (
     <>
