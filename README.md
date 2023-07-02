@@ -36,6 +36,7 @@ npm start
   - the filtering feature to persist the filters. This helps retain the filters throughout the session of the page.
 - Add a page number feature for the home page. Limits to say 10 rows. This helps reduce the size of the page. right now all 1000 pokemons loads on one page which can slow down the page.
 - Change the layout of the filtering to make it nicer
+- Client side hard coded strings, remove them and add them to the common.js file under data folder
 
 ## Author
 Anthony Massaad
