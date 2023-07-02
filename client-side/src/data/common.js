@@ -29,14 +29,13 @@ const common = {
     },
   },
   footer: {
-    copyright: "@copyright 2022 Anthony Massaad",
+    copyright: "@copyright 2023 Anthony Massaad",
   },
   filter: {
     basic: {
-      searchPlaceHolder: "Name or Number",
+      searchPlaceHolder: "Pokemon Name",
       additionalInfo: "Use the Advanced Search to search Pokémon by type!",
-      clarification:
-        "Search Pokémons by either their name or by their pokemon ID!",
+      clarification: "Search Pokémons by their name",
     },
   },
   pokemonTypes: [
